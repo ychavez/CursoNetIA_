@@ -1,0 +1,11 @@
+﻿################################################################################
+# Este archivo .gitignore ha sido creado automáticamente por Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs/CursoNETIA/CopilotIndices/18.9.1329.3188
+/.vs/CursoNETIA.slnx/copilot-chat/e8f2282e/sessions
+/.vs/CursoNETIA.slnx/FileContentIndex
+/.vs/CursoNETIA.slnx/v18
+*.sqlite
+/src/AulaPedidos.Api/bin/Debug/net10.0
+/src/AulaPedidos.Api/obj
