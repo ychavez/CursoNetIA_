@@ -9,3 +9,4 @@
 *.sqlite
 /src/AulaPedidos.Api/bin/Debug/net10.0
 /src/AulaPedidos.Api/obj
+/.vs/CopilotSnapshots/5587E98F80E01C428833C6077EFC5CF8
