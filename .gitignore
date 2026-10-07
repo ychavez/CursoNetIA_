@@ -13,3 +13,5 @@
 /src/AulaPedidos.Application/obj
 /src/AulaPedidos.Application/bin/Debug/net10.0
 /.vs
+/src/AulaPedidos.Domain/bin/Debug/net10.0
+/src/AulaPedidos.Domain/obj
