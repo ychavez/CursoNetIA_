@@ -1,17 +1,98 @@
-﻿################################################################################
-# Este archivo .gitignore ha sido creado automáticamente por Microsoft(R) Visual Studio.
-################################################################################
+﻿# Build results
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+[Bb]uild/
+[Dd]ist/
+artifacts/
+publish/
 
-/.vs/CursoNETIA/CopilotIndices/18.9.1329.3188
-/.vs/CursoNETIA.slnx/copilot-chat/e8f2282e/sessions
-/.vs/CursoNETIA.slnx/FileContentIndex
-/.vs/CursoNETIA.slnx/v18
+# Visual Studio
+.vs/
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.sln.docstates
+*.VC.db
+*.VC.VC.opendb
+*.opendb
+
+# Visual Studio Code and JetBrains Rider
+.vscode/
+.idea/
+*.sln.iml
+_ReSharper*/
+*.DotSettings.user
+
+# .NET and NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+project.lock.json
+project.fragment.lock.json
+*.nuget.props
+*.nuget.targets
+BenchmarkDotNet.Artifacts/
+
+# Test results and code coverage
+TestResults/
+[Tt]est[Rr]esult*/
+*.trx
+*.coverage
+*.coveragexml
+coverage/
+coverage*.json
+coverage*.xml
+coverage*.info
+*.lcov
+
+# Publish profiles
+*.Publish.xml
+*.pubxml
+*.pubxml.user
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+secrets.json
+appsettings.Local.json
+appsettings.*.local.json
+
+# Local databases
 *.sqlite
-/src/AulaPedidos.Api/bin/Debug/net10.0
-/src/AulaPedidos.Api/obj
-/.vs/CopilotSnapshots/5587E98F80E01C428833C6077EFC5CF8
-/src/AulaPedidos.Application/obj
-/src/AulaPedidos.Application/bin/Debug/net10.0
-/.vs
-/src/AulaPedidos.Domain/bin/Debug/net10.0
-/src/AulaPedidos.Domain/obj
+*.sqlite-shm
+*.sqlite-wal
+*.db-shm
+*.db-wal
+
+# Generated files
+Generated Files/
+*.generated.cs
+*.g.cs
+*.g.i.cs
+
+# Operating system files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Temporary and log files
+*.tmp
+*.temp
+*.bak
+*.cache
+*.pid
+*.log
+~$*
