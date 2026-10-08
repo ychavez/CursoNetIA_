@@ -1,17 +1,52 @@
-﻿################################################################################
-# Este archivo .gitignore ha sido creado automáticamente por Microsoft(R) Visual Studio.
-################################################################################
+# Compilación de .NET (todos los proyectos y configuraciones)
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+[Aa]rtifacts/
+x64/
+x86/
 
-/.vs/CursoNETIA/CopilotIndices/18.9.1329.3188
-/.vs/CursoNETIA.slnx/copilot-chat/e8f2282e/sessions
-/.vs/CursoNETIA.slnx/FileContentIndex
-/.vs/CursoNETIA.slnx/v18
+# Archivos locales de Visual Studio y otros IDE
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.rsuser
+.idea/
+
+# Pruebas y cobertura
+[Tt]est[Rr]esults/
+coverage/
+coverage.xml
+coverage.json
+*.coverage
+*.coveragexml
+*.trx
+
+# Paquetes descargados y resultados de empaquetado
+packages/
+*.nupkg
+*.snupkg
+
+# Logs y temporales
+*.log
+*.tmp
+*.bak
+*.pdb
+
+# Configuración y datos locales
+.env
+.env.*
+!.env.example
+!.env.template
+.local/
 *.sqlite
-/src/AulaPedidos.Api/bin/Debug/net10.0
-/src/AulaPedidos.Api/obj
-/.vs/CopilotSnapshots/5587E98F80E01C428833C6077EFC5CF8
-/src/AulaPedidos.Application/obj
-/src/AulaPedidos.Application/bin/Debug/net10.0
-/.vs
-/src/AulaPedidos.Domain/bin/Debug/net10.0
-/src/AulaPedidos.Domain/obj
+*.sqlite-shm
+*.sqlite-wal
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+Desktop.ini
