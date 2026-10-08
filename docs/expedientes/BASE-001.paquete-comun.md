@@ -1,160 +1,207 @@
-# Paquete común BASE-001 — Revisión de la base de AulaPedidos
+# Paquete común BASE-001 — Esqueleto de AulaPedidos
 
-> Estado: borrador no congelado. No iniciar las consultas A/B hasta completar el estado exacto y declarar una versión congelada.
+## Control
+
+- Versión candidata: 1
+- Estado: no congelado
+- Motivo: faltan commit, diff, archivos nuevos y comprobación de existencia de
+  los archivos candidatos.
+- Destinatarios previstos:
+  - Informe A: Arquitecto
+  - Informe B: Pruebas
+- Modalidad: consultas manuales en dos chats separados de Visual Studio.
+- Este paquete no contiene informes A/B ni síntesis.
+
+No debe entregarse a A/B hasta completar el estado base y declararlo congelado.
 
 ## Objetivo
 
-Examinar la base técnica de AulaPedidos antes de implementar funciones de negocio. Determinar qué existe realmente en arquitectura, ADR, configuración, documentación, proyectos y pruebas; qué falta; y qué decisiones y evidencias se necesitan antes de proponer una implementación.
+Analizar la creación del esqueleto compilable y verificable de AulaPedidos en
+.NET 10, tomando este repositorio como referencia.
 
-## Repositorio y estado
+El resultado candidato contiene únicamente:
 
-- Directorio: `C:\Users\Yael\Curso\CursoNetIA`
-- Rama declarada por el entorno: `master`
-- Remoto declarado: `origin` (`https://github.com/ychavez/CursoNetIA_`)
-- Commit: pendiente.
-- Diff local: pendiente.
-- Archivos nuevos: pendiente.
-- Compilación y pruebas: no aportadas.
-- Premisa humana: todavía no se han implementado funciones de negocio.
-- Comprobación de la premisa contra el código: pendiente.
+- una solución de AulaPedidos;
+- cuatro capas: Domain, Application, Infrastructure y Api;
+- referencias entre proyectos;
+- composición mediante DI;
+- Minimal API;
+- documento OpenAPI;
+- health check;
+- proyectos y pruebas mínimas del esqueleto.
 
-## Contexto comprobado por el Coordinador
+No incluye lógica de negocio.
 
-Se revisaron:
+## Contexto normativo
 
 - `.github/copilot-instructions.md`
-- `docs/multiagente-copilot.md`
 - `docs/arquitectura.md`
 - `docs/seguridad.md`
-- `docs/expedientes/README.md`
+- `docs/multiagente-copilot.md`
 
-No se ha realizado una búsqueda ni un inventario completo del repositorio.
+Hechos relevantes procedentes de esos documentos:
 
-## Arquitectura documentada
+1. Domain no depende de EF, HTTP ni Infrastructure.
+2. Application depende de Domain.
+3. Infrastructure puede depender de Application y Domain.
+4. Api referencia Application e Infrastructure como punto de composición.
+5. La superficie HTTP usa Minimal APIs.
+6. No se añaden paquetes, servicios ni abstracciones sin necesidad concreta.
+7. Los comandos y sus resultados sólo cuentan como evidencia cuando han sido
+   realmente ejecutados e identificados.
 
-La documentación describe:
+## Dependencias de compilación candidatas
 
-- API modular desplegada como una unidad.
-- Domain sin dependencias de EF, HTTP ni Infrastructure.
-- Application para casos de uso, DTO, puertos, mediador y `Result`.
-- Infrastructure para persistencia, adaptadores, caché y outbox.
-- Api como composición y transporte mediante Minimal APIs.
-- Productos y pedidos con propiedad por usuario, precio histórico, concurrencia y borrado lógico.
-- SQL Server para contenedores y SQLite para desarrollo local.
-- JWT, permisos y autorización sobre el recurso.
+```
+Api -> Application
+Api -> Infrastructure
+Infrastructure -> Application
+Infrastructure -> Domain
+Application -> Domain
+Domain -> ninguna capa
+```
 
-Estas descripciones no prueban por sí mismas que los componentes estén implementados.
-
-## Reglas y restricciones
-
-1. No editar archivos ni ejecutar comandos.
-2. No proponer MediatR ni sustituir el mediador y `Result` existentes sin una necesidad demostrada.
-3. No añadir paquetes, capas, servicios externos o abstracciones sin justificación concreta.
-4. No introducir dependencias de EF, HTTP o Infrastructure en Domain.
-5. Diferenciar autenticación, permiso y pertenencia del recurso.
-6. No exponer secretos, tokens, claves ni datos personales.
-7. Marcar cada afirmación como observada, documentada, inferida o pendiente.
-8. No tratar la compilación, si posteriormente se aporta, como prueba suficiente de seguridad o comportamiento.
-9. No autorizar implementación ni cierre.
+Las pruebas sólo referencian los proyectos necesarios para sus casos.
 
 ## Alcance
 
-### Incluido
+### Producción
 
-- Arquitectura y referencias entre proyectos.
-- ADR existentes y cobertura de decisiones.
-- Configuración de aplicación, compilación, paquetes, contenedores y CI.
-- Coherencia entre documentación y código.
-- Infraestructura de pruebas y criterios previos al desarrollo.
-- Riesgos de seguridad y reproducibilidad.
+- `src/AulaPedidos.Domain`
+- `src/AulaPedidos.Application`
+- `src/AulaPedidos.Infrastructure`
+- `src/AulaPedidos.Api`
 
-### Excluido
+### Pruebas
 
-- Edición de código, pruebas o documentación.
-- Implementación de catálogo o pedidos.
-- Ejecución de build, test, migraciones o despliegues.
-- Aprobación final de arquitectura o liberación.
+- `tests/AulaPedidos.ArchitectureTests`
+- `tests/AulaPedidos.Api.IntegrationTests`
 
-## Evidencia pendiente antes de congelar
+### Capacidades
 
-- Commit y diff sanitizado.
-- Inventario completo de documentación y ADR.
-- Inventario de proyectos y archivos de configuración.
-- Solución y archivos de proyecto.
-- Código relevante de composición y fronteras.
-- Inventario de pruebas.
-- Versiones relevantes de SDK y paquetes.
-- Estado de CI, contenedores y persistencia.
+- Proyectos con destino .NET 10.
+- Solución `AulaPedidos.slnx`.
+- Referencias de proyecto conforme al grafo permitido.
+- Punto de composición en Api.
+- Minimal API.
+- Health check básico, con ruta candidata `GET /health`.
+- Documento OpenAPI mediante capacidades compatibles con ASP.NET Core
+  para .NET 10.
+- Pruebas de arquitectura e integración del esqueleto.
+
+La DI debe ser real, pero no se crearán interfaces, servicios o adaptadores
+ficticios sólo para llenar el contenedor.
+
+## Exclusiones
+
+- Lógica de catálogo o pedidos.
+- Entidades, value objects, agregados y eventos.
+- Casos de uso, DTOs de negocio, handlers y mediador.
+- EF Core, DbContext, repositorios, migraciones y base de datos.
+- Autenticación, autorización, JWT, roles y permisos.
+- Notificaciones, outbox, caché y resiliencia.
+- Controllers MVC.
+- Docker, despliegue y CI/CD.
+- Secretos y datos de ejemplo.
+- Herramientas auxiliares.
+- Cambios en documentación técnica, perfiles o bitácoras.
+- Renombrado o eliminación de la solución existente.
+- Paquetes y abstracciones no indispensables.
+
+## Archivos candidatos permitidos
+
+- `AulaPedidos.slnx`
+- `src/AulaPedidos.Domain/AulaPedidos.Domain.csproj`
+- `src/AulaPedidos.Application/AulaPedidos.Application.csproj`
+- `src/AulaPedidos.Infrastructure/AulaPedidos.Infrastructure.csproj`
+- `src/AulaPedidos.Api/AulaPedidos.Api.csproj`
+- `src/AulaPedidos.Api/Program.cs`
+- `src/AulaPedidos.Api/Properties/launchSettings.json`, condicionado a necesidad
+  de plantilla y ausencia de secretos.
+- `tests/AulaPedidos.ArchitectureTests/AulaPedidos.ArchitectureTests.csproj`
+- Archivos mínimos de prueba dentro de
+  `tests/AulaPedidos.ArchitectureTests/`.
+- `tests/AulaPedidos.Api.IntegrationTests/AulaPedidos.Api.IntegrationTests.csproj`
+- Archivos mínimos de infraestructura y prueba dentro de
+  `tests/AulaPedidos.Api.IntegrationTests/`.
+
+Cualquier archivo adicional requiere nueva síntesis y decisión humana.
 
 ## Criterios de aceptación
 
-- Inventario respaldado por rutas concretas.
-- Tabla de existente, parcial, ausente y no comprobado.
-- Contradicciones y ADR faltantes identificados.
-- Separación entre infraestructura y funciones de negocio.
-- Riesgos priorizados con evidencia necesaria.
-- Alternativas explícitas y condiciones que las invalidarían.
-- Matriz de pruebas derivada de requisitos.
-- Preguntas que requieran decisión humana.
+1. La solución contiene los cuatro proyectos de producción y los proyectos de
+   pruebas aprobados.
+2. Todos tienen como destino .NET 10.
+3. Las referencias coinciden con el grafo permitido.
+4. Domain no referencia otras capas ni tecnologías de transporte o
+   persistencia.
+5. Api utiliza Minimal APIs y es el punto de composición.
+6. El host se crea sin errores de DI.
+7. `GET /health` ofrece una respuesta satisfactoria sin detalles sensibles.
+8. El documento OpenAPI está disponible y sólo refleja las rutas incluidas en
+   esta ronda.
+9. Existen pruebas automatizadas para:
+   - fronteras entre capas;
+   - health check;
+   - disponibilidad de OpenAPI.
+10. Restore, build y tests concluyen correctamente según evidencia real.
+11. El diff no contiene lógica de negocio, secretos ni archivos fuera del
+	alcance.
 
-## Consulta A — Arquitecto
+## Casos negativos y de borde
 
-Analiza exclusivamente este paquete congelado y los archivos de contexto autorizados. No edites ni ejecutes comandos.
+- Domain no referencia Application, Infrastructure ni Api.
+- Application no referencia Infrastructure ni Api.
+- Infrastructure no referencia Api.
+- No existen controllers ni endpoints de negocio.
+- No existen entidades, repositorios, DbContext o migraciones.
+- No se registran servicios ficticios para aparentar DI.
+- OpenAPI no contiene operaciones de catálogo, pedidos o autenticación.
+- La API puede construirse aunque Infrastructure no tenga adaptadores reales.
+- Una capa vacía no justifica tipos artificiales.
+- Los archivos adicionales producidos por una plantilla no quedan autorizados
+  automáticamente.
+- No se modifica `CursoNETIA.slnx` sin una decisión humana expresa.
 
-Contrasta código, ADR, configuración y documentación. Separa observado directamente, documentado, inferido y pendiente.
+## Riesgos que A/B deben evaluar
 
-Determina:
+1. Paquetes mínimos y compatibles con .NET 10 para OpenAPI y pruebas.
+2. Forma de verificar el grafo de referencias sin sobrediseñar.
+3. Forma de probar el host, health check y OpenAPI con el mínimo acoplamiento.
+4. Archivos generados por las plantillas que deberían autorizarse o excluirse.
+5. Posible convivencia entre `CursoNETIA.slnx` y `AulaPedidos.slnx`.
+6. Riesgo de crear servicios ficticios sólo para demostrar DI.
+7. Qué evidencia invalidaría la propuesta.
 
-1. Qué estructura técnica existe realmente.
-2. Qué decisiones están respaldadas por ADR.
-3. Qué decisiones documentadas no están implementadas.
-4. Qué elementos implementados carecen de decisión o documentación.
-5. Qué contradicciones, ADR ausentes u obsoletos existen.
-6. Si las dependencias respetan las fronteras de las capas.
-7. Qué infraestructura mínima falta antes de implementar negocio.
-8. Qué componentes serían prematuros y deberían posponerse.
+## Entregable solicitado a cada lector
 
-Entrega:
+Cada informe debe distinguir:
 
-- Evidencia con rutas y referencias.
-- Supuestos.
-- Alternativas y costes.
-- Riesgos priorizados.
-- Preguntas para decisión humana.
-- Secuencia recomendada.
-- Condiciones que invalidarían la recomendación.
+- hechos observados;
+- supuestos;
+- alternativa recomendada;
+- alternativas descartadas y motivo;
+- paquetes o archivos adicionales imprescindibles;
+- riesgos;
+- evidencia necesaria;
+- preguntas pendientes;
+- qué invalidaría su recomendación.
 
-No autorices implementación.
+Ningún lector edita archivos ni afirma haber ejecutado comandos.
 
-## Consulta B — Pruebas
+## Estado base pendiente
 
-Analiza exclusivamente este paquete congelado y los archivos de contexto autorizados. No edites, no ejecutes comandos y no consultes el informe A.
+- Directorio: `C:\Users\Yael\Curso\CursoNetIA`
+- Repositorio:
+  `https://github.com/ychavez/CursoNetIA_`
+- Rama informada: `master`
+- Solución existente informada: `CursoNETIA.slnx`
+- Visual Studio informado: Community 2026 `18.9.3`
+- Destino solicitado: .NET 10
+- Commit: pendiente de aportación humana.
+- Diff local: pendiente de aportación humana.
+- Archivos nuevos relevantes: pendientes de aportación humana.
+- Existencia previa de archivos candidatos: pendiente de comprobación.
 
-Separa observado directamente, documentado, inferido y pendiente.
-
-Determina:
-
-1. Qué infraestructura de pruebas existe realmente.
-2. Qué requisitos son comprobables actualmente.
-3. Qué criterios de aceptación faltan antes del desarrollo.
-4. Qué riesgos de seguridad, configuración y aislamiento deben probarse.
-5. Qué pruebas de arquitectura, composición, autenticación, autorización, persistencia y errores son necesarias.
-6. Qué casos positivos, negativos y de borde deben definirse para catálogo y pedidos.
-7. Qué configuración o dependencias dificultan pruebas reproducibles.
-
-Entrega una matriz con:
-
-- Caso.
-- Origen del requisito.
-- Precondición.
-- Acción.
-- Resultado esperado.
-- Tipo de prueba.
-- Evidencia requerida.
-- Estado: posible ahora, bloqueado o pendiente.
-
-No afirmes haber ejecutado pruebas y no derives expectativas únicamente del código existente.
-
-## Entrega de informes
-
-Cada rol entregará su informe original en una conversación separada. Ningún informe se añadirá a este paquete. El Coordinador sólo los incorporará al expediente después de terminar ambas consultas y tras confirmación humana de un nuevo guardado.
+Hasta completar estos datos, esta versión no está congelada y las consultas A/B
+no deben comenzar.
