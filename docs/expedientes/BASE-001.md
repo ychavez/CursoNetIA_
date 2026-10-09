@@ -1,277 +1,148 @@
-# Expediente BASE-001 — Esqueleto de AulaPedidos
+# BASE-001: base técnica de AulaPedidos
 
-## Control del expediente
+## Estado
 
-- Identificador: `BASE-001`
-- Fase actual: E — preparación del expediente
-- Modalidad: consultas separadas coordinadas manualmente en Visual Studio
-- Directorio de trabajo: `C:\Users\Yael\Curso\CursoNetIA`
-- Repositorio: `https://github.com/ychavez/CursoNetIA_`
-- Rama informada: `master`
-- Solución actualmente informada por el entorno: `CursoNETIA.slnx`
-- Paquete común: [BASE-001.paquete-comun.md](BASE-001.paquete-comun.md)
-- Estado del paquete común: pendiente de completar y congelar
-- Autorización de implementación: pendiente de decisión humana
-- Cierre: pendiente
-- Confirmación de guardado: pendiente
+- Tipo: alcance inicial.
+- Estado de la decisión: propuesta pendiente de validación humana mediante la implementación y sus comprobaciones.
+- Rol de este documento: delimitar el trabajo; no acredita que las capacidades estén implementadas.
 
 ## Objetivo
 
-Preparar una propuesta para crear el esqueleto compilable y verificable de
-AulaPedidos sobre .NET 10, tomando las reglas de arquitectura de este
-repositorio como referencia.
+Establecer una base técnica mínima para AulaPedidos sobre .NET 10 y Minimal APIs, conservando `CursoNETIA.slnx` y la separación en Domain, Application, Infrastructure y Api. La base debe ofrecer composición explícita mediante `AddApplication` y `AddInfrastructure`, OpenAPI sólo en Development, Health Checks en `/health`, contratos para Repository Pattern y la biblioteca `Mediator` de martinothamar, además de proyectos de pruebas, sin introducir dominio ni persistencia reales.
 
-La ronda se limita a:
+## Estado base observado
 
-1. Solución .NET 10 de AulaPedidos.
-2. Cuatro proyectos de producción:
-   - `AulaPedidos.Domain`
-   - `AulaPedidos.Application`
-   - `AulaPedidos.Infrastructure`
-   - `AulaPedidos.Api`
-3. Referencias entre proyectos conforme a las fronteras documentadas.
-4. Composición mediante inyección de dependencias.
-5. API basada exclusivamente en Minimal APIs.
-6. Documento OpenAPI expuesto por ASP.NET Core.
-7. Health check básico.
-8. Proyectos de pruebas para arquitectura/unidad e integración de la API.
-9. Pruebas mínimas del esqueleto y de sus fronteras observables.
+Revisión documental realizada sin ejecutar comandos:
 
-No se incorporará lógica de catálogo, pedidos, usuarios, persistencia,
-autenticación, autorización ni otras reglas de negocio.
+- `CursoNETIA.slnx` contiene los cuatro proyectos de producción bajo `src`: Api, Application, Domain e Infrastructure.
+- Los cuatro proyectos apuntan a `net10.0`, con nullable e implicit usings habilitados.
+- Domain no declara referencias a otras capas.
+- Application referencia Domain.
+- Infrastructure referencia Application y Domain.
+- Api referencia Application e Infrastructure y usa `Microsoft.AspNetCore.OpenApi`.
+- `Program.cs` registra OpenAPI y lo mapea dentro de `Development`.
+- `Program.cs` expone actualmente `/health/live` mediante una Minimal API manual; no es un Health Check y no coincide con la ruta requerida `/health`.
+- No se encontraron los proyectos de pruebas consultados ni aparecen proyectos de pruebas en la solución.
+- No se observaron en los archivos consultados `AddApplication`, `AddInfrastructure`, contratos de repositorio, registro de Mediator, entidades, lógica de negocio ni configuración de base de datos.
+- `AulaPedidos.Api.http` conserva una petición de plantilla a `/weatherforecast/` que no corresponde al estado actual de `Program.cs`.
+- `docs/adr/002-persistencia-y-outbox.md` describe decisiones para una fase futura; BASE-001 no debe materializar SQLite, SQL Server, outbox ni workers.
 
-## Fuentes y procedencia
+## Fuentes consultadas
 
-- Requisitos de alcance: solicitud humana de la ronda `BASE-001`.
-- Destino .NET: contexto del espacio de trabajo y solicitud humana.
-- Fronteras entre capas: `docs/arquitectura.md`.
-- Reglas de trabajo y calidad: `.github/copilot-instructions.md`.
-- Proceso de consulta: `docs/multiagente-copilot.md`.
-- Consideraciones de seguridad: `docs/seguridad.md`.
-- Estado del repositorio: parcialmente informado por el entorno; faltan commit,
-  diff y archivos nuevos.
+- `.github/copilot-instructions.md` (aportado como instrucción del espacio de trabajo).
+- `docs/multiagente-copilot.md`.
+- `docs/expedientes/README.md`.
+- `CursoNETIA.slnx`.
+- `src/AulaPedidos.Api/AulaPedidos.Api.csproj`.
+- `src/AulaPedidos.Api/Program.cs`.
+- `src/AulaPedidos.Api/AulaPedidos.Api.http`.
+- `src/AulaPedidos.Application/AulaPedidos.Application.csproj`.
+- `src/AulaPedidos.Domain/AulaPedidos.Domain.csproj`.
+- `src/AulaPedidos.Infrastructure/AulaPedidos.Infrastructure.csproj`.
+- `docs/adr/002-persistencia-y-outbox.md`.
 
-## Asignación propuesta de consultas
+No se encontró `docs/paquetes/BASE-001-paquete-comun.md`; por tanto, este alcance se apoya en la petición actual y en los archivos enumerados.
 
-- Informe A: Arquitecto.
-- Informe B: Pruebas.
-- Sesiones: dos chats nuevos y separados, abiertos manualmente por la persona
-  responsable en Visual Studio.
-- Entrada de ambos: únicamente el paquete común congelado y los archivos de
-  contexto permitidos.
-- Independencia: ninguno recibe el informe del otro.
-- Presupuesto: una consulta inicial A/B y, como máximo, una aclaración.
-- Tiempo de referencia: 10 minutos para análisis y síntesis, ajustable por la
-  persona responsable antes de iniciar.
+## Alcance incluido
 
-Los informes A/B están pendientes y no se simulan en este expediente.
+### Estructura y dependencias
 
-## Alcance candidato
+- Conservar `CursoNETIA.slnx`, los nombres actuales y `net10.0`.
+- Mantener las cuatro capas y sus responsabilidades:
+  - Domain: futuro modelo y reglas, sin dependencias de otras capas.
+  - Application: casos de uso y contratos; depende sólo de Domain.
+  - Infrastructure: futuras implementaciones técnicas; depende de Application y, cuando sea necesario, de Domain.
+  - Api: composición y transporte mediante Minimal APIs; referencia Application e Infrastructure.
+- Añadir a la solución los proyectos de pruebas bajo `tests` sin alterar las fronteras anteriores.
 
-### Estructura de producción
+### Composición
 
-- `src/AulaPedidos.Domain`
-- `src/AulaPedidos.Application`
-- `src/AulaPedidos.Infrastructure`
-- `src/AulaPedidos.Api`
+- Crear `AddApplication(IServiceCollection)` en Application.
+- Crear `AddInfrastructure(IServiceCollection, IConfiguration)` en Infrastructure. Se admite `IConfiguration` para preparar opciones futuras, pero BASE-001 no debe leer cadenas de conexión ni registrar proveedores de datos.
+- Mantener `Program.cs` como raíz de composición y hacer que invoque ambas extensiones.
+- Registrar la biblioteca NuGet `Mediator`, cuyo autor es martinothamar, a través de la composición de Application iniciada desde Api.
+- No instalar ni usar `MediatR` y no crear un mediador propio.
+- No añadir handlers ficticios únicamente para demostrar el registro.
 
-### Estructura de pruebas
+### Minimal APIs, OpenAPI y salud
 
-- `tests/AulaPedidos.ArchitectureTests`
-- `tests/AulaPedidos.Api.IntegrationTests`
+- Conservar el arranque como Minimal API, sin controllers.
+- Mantener OpenAPI accesible únicamente cuando el entorno sea `Development`.
+- Sustituir el endpoint manual de salud por ASP.NET Core Health Checks: registrar `AddHealthChecks()` y mapear `MapHealthChecks("/health")`.
+- No añadir comprobaciones de base de datos, servicios externos ni dependencias inexistentes.
+- Actualizar el archivo `.http` para que represente los endpoints realmente disponibles en esta base.
 
-### Dependencias de compilación permitidas
+### Repository Pattern
 
-- `AulaPedidos.Domain` no referencia ningún otro proyecto de la solución.
-- `AulaPedidos.Application` referencia `AulaPedidos.Domain`.
-- `AulaPedidos.Infrastructure` referencia:
-  - `AulaPedidos.Application`
-  - `AulaPedidos.Domain`
-- `AulaPedidos.Api` referencia:
-  - `AulaPedidos.Application`
-  - `AulaPedidos.Infrastructure`
-- Las pruebas referencian únicamente los proyectos necesarios para sus casos.
-- No se permiten referencias que inviertan estas fronteras.
+- Declarar `IRepository<T>` como contrato genérico en Application, sin dependencia de EF Core ni de Infrastructure.
+- Mantener el contrato mínimo y agnóstico de almacenamiento. No imponer una clase base, una interfaz de entidad, un tipo de identificador o semántica de consultas que todavía no estén definidos por el dominio.
+- No crear implementaciones en memoria, colecciones estáticas, datos de ejemplo ni repositorios vacíos registrados en DI.
+- Preparar en Infrastructure únicamente el punto de composición para futuras implementaciones. La primera implementación concreta queda fuera de BASE-001.
 
-### Inyección de dependencias
+### Pruebas
 
-La composición se realiza desde `AulaPedidos.Api`. Al no existir todavía casos
-de uso ni adaptadores reales, no se crearán interfaces o servicios ficticios
-sólo para demostrar el contenedor.
+- Crear al menos dos proyectos de pruebas y agregarlos a `CursoNETIA.slnx`:
+  - pruebas de arquitectura para las dependencias entre capas y las exclusiones críticas;
+  - pruebas de integración de Api para `/health` y la disponibilidad de OpenAPI según el entorno.
+- Añadir una comprobación de composición que demuestre que `AddApplication` y `AddInfrastructure` pueden registrarse y construir el contenedor con la configuración mínima.
+- Las pruebas no deben introducir entidades o casos de uso ficticios en los proyectos de producción.
 
-Si A/B recomiendan métodos de registro por capa, deberán justificar los tipos
-reales que registrarían y cualquier dependencia adicional necesaria.
+## Fuera de alcance
 
-### Superficie HTTP
+- Entidades, agregados, value objects, reglas o cualquier lógica de negocio.
+- Casos de uso, comandos, consultas o handlers de negocio.
+- EF Core, `DbContext`, migraciones y cualquier proveedor o instancia de base de datos.
+- Repositorios concretos, incluidos repositorios en memoria o simulaciones en producción.
+- Seed, datos de ejemplo, outbox, workers, mensajería externa y adaptadores HTTP.
+- Autenticación, autorización, usuarios y secretos.
+- Controllers, UI, Docker y despliegue.
+- MediatR o una implementación propia del patrón mediator.
+- Implementar ahora las decisiones futuras descritas en el ADR 002.
 
-- Uso exclusivo de Minimal APIs.
-- Endpoint de health check, candidato: `GET /health`.
-- OpenAPI habilitado mediante las capacidades de ASP.NET Core para .NET 10.
-- No se crean endpoints de catálogo, pedidos, autenticación o negocio.
-- No se añade Swagger UI salvo decisión humana posterior y justificación
-  separada; publicar el documento OpenAPI satisface esta ronda.
+## Criterios de aceptación
 
-## Exclusiones
+1. `CursoNETIA.slnx` sigue siendo la solución y contiene los cuatro proyectos de producción más los proyectos de pruebas acordados.
+2. Todos los proyectos apuntan a .NET 10 y la solución compila sin advertencias o errores nuevos atribuibles a BASE-001.
+3. Las referencias respetan Domain <- Application <- Infrastructure y la composición desde Api; Domain no adquiere dependencias técnicas.
+4. Api llama a `AddApplication` y `AddInfrastructure` sin registrar servicios de negocio o persistencia inexistentes.
+5. El paquete utilizado es `Mediator` de martinothamar; no existe referencia a `MediatR` ni un mediador propio.
+6. `IRepository<T>` existe en Application y no depende de EF Core, HTTP o una implementación concreta.
+7. No existe implementación registrada de `IRepository<T>` mientras no haya almacenamiento real.
+8. `GET /health` devuelve una respuesta saludable mediante ASP.NET Core Health Checks.
+9. `/health/live` deja de ser el contrato de salud de BASE-001.
+10. OpenAPI está expuesto en Development y no está expuesto fuera de Development.
+11. No se han añadido entidades, lógica de negocio, base de datos, autenticación, outbox ni repositorios ficticios.
+12. Las pruebas automatizadas cubren fronteras de arquitectura, composición, salud y comportamiento de OpenAPI por entorno.
+13. `dotnet build CursoNETIA.slnx` y `dotnet test CursoNETIA.slnx` finalizan correctamente cuando el Implementador ejecute las comprobaciones.
 
-Quedan fuera de `BASE-001`:
+## Casos de aceptación
 
-- Entidades, value objects, agregados y eventos de dominio.
-- Casos de uso, comandos, consultas, handlers, DTOs de negocio y mediador.
-- EF Core, DbContext, migraciones, repositorios y bases de datos.
-- Autenticación, autorización, JWT, roles y permisos.
-- Catálogo, pedidos, usuarios y notificaciones.
-- Outbox, caché, reintentos y circuit breaker.
-- Docker, despliegue, CI/CD y configuración de producción.
-- Secretos, credenciales y datos personales.
-- Herramientas auxiliares.
-- ADR, bitácoras y demás documentación técnica.
-- Paquetes, capas o abstracciones no indispensables para el esqueleto aprobado.
-- Renombrar o eliminar la solución existente sin decisión humana expresa.
-- Cualquier lógica ficticia destinada únicamente a hacer pasar pruebas.
-
-## Archivos candidatos permitidos
-
-La lista deberá validarse contra el estado exacto antes de autorizar la
-implementación:
-
-- `AulaPedidos.slnx`
-- `src/AulaPedidos.Domain/AulaPedidos.Domain.csproj`
-- `src/AulaPedidos.Application/AulaPedidos.Application.csproj`
-- `src/AulaPedidos.Infrastructure/AulaPedidos.Infrastructure.csproj`
-- `src/AulaPedidos.Api/AulaPedidos.Api.csproj`
-- `src/AulaPedidos.Api/Program.cs`
-- `src/AulaPedidos.Api/Properties/launchSettings.json`, sólo si lo genera o
-  necesita la plantilla aprobada y no contiene secretos.
-- `tests/AulaPedidos.ArchitectureTests/AulaPedidos.ArchitectureTests.csproj`
-- Archivos de prueba mínimos dentro de
-  `tests/AulaPedidos.ArchitectureTests/`.
-- `tests/AulaPedidos.Api.IntegrationTests/AulaPedidos.Api.IntegrationTests.csproj`
-- Archivos de infraestructura y prueba mínimos dentro de
-  `tests/AulaPedidos.Api.IntegrationTests/`.
-
-No están autorizados archivos fuera de esta lista. Cualquier necesidad de
-`Directory.Build.props`, administración central de paquetes, configuración,
-documentación u otro archivo vuelve a síntesis y decisión humana.
-
-## Criterios de aceptación candidatos
-
-### Positivos
-
-1. `AulaPedidos.slnx` contiene exactamente los cuatro proyectos de producción y
-   los proyectos de pruebas aprobados.
-2. Todos los proyectos tienen como destino .NET 10.
-3. Las referencias de compilación respetan la dirección documentada.
-4. `AulaPedidos.Domain` permanece independiente de Application,
-   Infrastructure, HTTP y persistencia.
-5. `AulaPedidos.Api` usa Minimal APIs y actúa como punto de composición.
-6. La aplicación inicia con el contenedor de dependencias válido.
-7. `GET /health` responde satisfactoriamente cuando el proceso está saludable.
-8. El documento OpenAPI puede obtenerse en la ruta configurada y representa la
-   superficie HTTP incluida en la ronda.
-9. Las pruebas automatizadas verifican al menos:
-   - fronteras de referencias entre capas;
-   - respuesta satisfactoria de health check;
-   - disponibilidad del documento OpenAPI.
-10. Restore, build y tests terminan correctamente sobre el estado implementado,
-	según salidas reales aportadas por la persona que los ejecute.
-11. El diff final no contiene secretos ni lógica de negocio.
-
-### Negativos
-
-1. No aparecen referencias desde Domain hacia otra capa.
-2. Application no referencia Infrastructure ni Api.
-3. Infrastructure no referencia Api.
-4. No existen controllers MVC ni endpoints de negocio.
-5. No existen entidades, repositorios, DbContext, migraciones ni datos de
-   ejemplo.
-6. No se registran servicios ficticios para aparentar uso de DI.
-7. La respuesta del health check no expone excepciones, configuración sensible
-   ni detalles internos.
-8. OpenAPI no incorpora rutas de negocio fuera del alcance.
-9. No se modifica ni elimina `CursoNETIA.slnx` sin autorización expresa.
-10. No se añaden paquetes o archivos fuera del alcance aprobado.
-
-### Borde
-
-1. La API debe poder construirse sin Infrastructure contener implementaciones
-   reales.
-2. Un proyecto vacío de Domain no justifica introducir tipos de dominio
-   artificiales.
-3. La selección de rutas de OpenAPI y health check debe evitar colisiones y
-   quedar comprobada en pruebas.
-4. Si la plantilla genera archivos adicionales, éstos no se aceptan
-   automáticamente: deben incorporarse al alcance mediante decisión humana.
-
-## Matriz preliminar para el rol Pruebas
-
-| Caso | Resultado esperado | Evidencia pendiente |
+| Caso | Preparación | Resultado esperado |
 |---|---|---|
-| Grafo de referencias | Coincide con las dependencias permitidas | Inspección de proyectos y prueba de arquitectura |
-| Referencia prohibida desde Domain | Ausente | Prueba de arquitectura |
-| Inicio de la API | Host creado sin errores de DI | Prueba de integración |
-| `GET /health` | Respuesta HTTP satisfactoria | Prueba de integración |
-| Documento OpenAPI | Respuesta satisfactoria y documento válido | Prueba de integración |
-| Ruta de negocio no incluida | No existe | Inspección de OpenAPI |
-| Compilación | Sin errores | Salida real aportada por quien ejecute |
-| Suite de pruebas | Sin fallos | Salida real aportada por quien ejecute |
-| Secretos | Ninguno en el diff | Revisión del diff |
+| Salud positiva | Api iniciada con configuración mínima | `GET /health` responde con estado HTTP satisfactorio y usa Health Checks. |
+| Ruta anterior | Api iniciada | `/health/live` no se conserva como endpoint contractual. |
+| OpenAPI en Development | Entorno `Development` | El documento OpenAPI está disponible. |
+| OpenAPI fuera de Development | Entorno distinto de `Development` | El documento OpenAPI no está publicado. |
+| Composición mínima | Contenedor configurado sin base de datos | `AddApplication` y `AddInfrastructure` completan el registro y el proveedor se construye. |
+| Frontera de Domain | Inspección automatizada de referencias | Domain no referencia Application, Infrastructure ni Api. |
+| Mediator correcto | Inspección de paquetes y registros | Se usa `Mediator` de martinothamar y no `MediatR`. |
+| Persistencia ausente | Inspección de referencias y servicios | No hay EF Core, proveedores, `DbContext`, cadenas de conexión ni repositorios concretos. |
+| Dominio ausente | Inspección de producción | No se introducen entidades, reglas ni handlers ficticios. |
 
-Pruebas deberá revisar esta matriz desde los requisitos antes de que se autorice
-la implementación.
+## Riesgos y decisiones pendientes
 
-## Riesgos iniciales
+- La forma exacta de las operaciones de `IRepository<T>` debe mantenerse mínima. Sin entidades ni estrategia de identificadores, añadir CRUD completo sería una decisión prematura. Es una propuesta técnica, no una decisión humana ya aprobada.
+- Deben elegirse nombres concretos y framework de los proyectos de pruebas de acuerdo con las convenciones disponibles al implementar. La exigencia estable es separar arquitectura e integración y agregarlos a la solución.
+- La versión de `Mediator` debe ser compatible con .NET 10 y resolverse al implementar; no se fija aquí una versión no verificada.
+- No se ejecutaron compilación ni pruebas durante esta definición de alcance.
 
-1. Añadir tipos ficticios sólo para demostrar DI o referencias.
-2. Introducir paquetes innecesarios mediante plantillas.
-3. Confundir publicación de OpenAPI con la inclusión obligatoria de una UI.
-4. Romper la solución existente al crear o renombrar la nueva solución.
-5. Generar archivos adicionales fuera de la lista autorizada.
-6. Probar únicamente que compila, sin comprobar referencias ni superficie HTTP.
-7. Usar una ruta o API obsoleta para OpenAPI en .NET 10.
-8. Declarar resultados de build o tests sin ejecución real.
-9. Congelar A/B sobre un commit o diff no identificado.
+## Plan breve por rol
 
-## Estado base
+1. **Implementador:** aplicar únicamente este alcance en cambios pequeños, sin añadir dominio ni persistencia real.
+2. **Pruebas:** revisar los criterios, ejecutar compilación y pruebas, y comunicar resultados reales y pendientes.
+3. **Revisor:** comprobar fronteras, paquetes, ausencia de alcance extra y correspondencia entre pruebas y requisitos.
+4. **Responsable humano:** aceptar, pedir cambios o dejar pendientes a partir de la evidencia aportada.
 
-- Directorio: `C:\Users\Yael\Curso\CursoNetIA`
-- Repositorio activo informado:
-  `https://github.com/ychavez/CursoNetIA_`
-- Rama informada: `master`
-- Solución existente informada:
-  `C:\Users\Yael\Curso\CursoNetIA\CursoNETIA.slnx`
-- Entorno informado: Visual Studio Community 2026 `18.9.3`
-- Destino solicitado: .NET 10
-- Commit: pendiente de aportación humana.
-- Cambios locales: pendientes de aportación humana.
-- Archivos nuevos relevantes: pendientes de aportación humana.
-- Existencia previa de los archivos candidatos: pendiente de comprobación.
+## Prompt autocontenido para el Implementador
 
-Este estado incompleto bloquea la congelación del paquete y el inicio de A/B.
-
-## Condiciones de parada
-
-La ronda vuelve a decisión humana si:
-
-- cambia el estado base;
-- se necesita modificar un archivo no permitido;
-- se requiere lógica de negocio;
-- aparece una dependencia o paquete no justificado;
-- se pretende renombrar o retirar la solución existente;
-- A/B trabajan sobre paquetes diferentes;
-- falta uno de los informes;
-- se agota el presupuesto;
-- no existe evidencia suficiente para un criterio.
-
-## Estado del proceso
-
-- Preparación del expediente: en curso.
-- Estado exacto: pendiente.
-- Paquete común congelado: no.
-- Informe A: pendiente.
-- Informe B: pendiente.
-- Síntesis: pendiente.
-- Decisión humana de implementación: pendiente.
-- Implementador único: no designado.
-- Implementación: no iniciada.
-- Verificación: pendiente.
-- Decisión humana de cierre: pendiente.
+> Implementa BASE-001 en `CursoNETIA.slnx` sobre .NET 10. Conserva las capas AulaPedidos.Domain, Application, Infrastructure y Api y sus dependencias. Añade `AddApplication` y `AddInfrastructure`; usa Minimal APIs; publica OpenAPI sólo en Development; sustituye `/health/live` por ASP.NET Core Health Checks en `/health`. Declara en Application un contrato mínimo `IRepository<T>` agnóstico de almacenamiento y no crees ni registres repositorios concretos o en memoria. Integra la biblioteca `Mediator` de martinothamar desde la composición iniciada por Api; no uses MediatR ni un mediador propio y no añadas handlers ficticios. Prepara Infrastructure sólo como punto de composición futura, sin EF Core, `DbContext`, proveedor, migraciones ni cadenas de conexión. Añade a la solución proyectos de pruebas para arquitectura e integración de Api y cubre composición, `/health`, OpenAPI por entorno, fronteras y exclusiones. Actualiza el archivo `.http`. No añadas entidades, lógica de negocio, autenticación, outbox, worker, Docker ni datos de ejemplo. Ejecuta `dotnet build CursoNETIA.slnx` y `dotnet test CursoNETIA.slnx` e informa resultados reales, archivos modificados y cualquier pendiente.
