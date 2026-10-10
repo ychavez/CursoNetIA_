@@ -1,3 +1,6 @@
+using AulaPedidos.Application.Abstractions.Persistence;
+using AulaPedidos.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,6 +14,18 @@ public static class DependencyInjection
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
+
+        var connectionString = configuration.GetConnectionString("Default");
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new InvalidOperationException(
+                "Falta la cadena de conexi\u00f3n 'ConnectionStrings:Default' para SQLite.");
+        }
+
+        services.AddDbContext<AppDbContext>(options => options.UseSqlite(connectionString));
+        services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+
         return services;
     }
 }

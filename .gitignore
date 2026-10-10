@@ -45,6 +45,9 @@ packages/
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal
+*.db
+*.db-shm
+*.db-wal
 
 # Archivos del sistema operativo
 .DS_Store

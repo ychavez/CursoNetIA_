@@ -22,7 +22,7 @@ public sealed class CompositionTests
     public void InfrastructureRejectsNullServices()
     {
         var exception = Assert.Throws<ArgumentNullException>(() =>
-            AulaPedidos.Infrastructure.DependencyInjection.AddInfrastructure(null!, new ConfigurationBuilder().Build()));
+            AulaPedidos.Infrastructure.DependencyInjection.AddInfrastructure(null!, Configuration()));
         Assert.Equal("services", exception.ParamName);
     }
 
@@ -34,25 +34,37 @@ public sealed class CompositionTests
     }
 
     [Fact]
-    public void CompositionIsChainableWithoutStorageAndDoesNotRegisterRepositories()
+    public void CompositionIsChainableAndRegistersScopedPersistence()
     {
         var services = new ServiceCollection();
         Assert.Same(services, services.AddApplication());
-        var beforeInfrastructure = services.ToArray();
-        Assert.Same(services, services.AddInfrastructure(new ConfigurationBuilder().Build()));
-        Assert.Equal(beforeInfrastructure, services.ToArray());
-        Assert.Equal(new[] { typeof(IPublisher), typeof(ISender) }.OrderBy(type => type.Name),
-            services.Select(descriptor => descriptor.ServiceType).OrderBy(type => type.Name));
-        Assert.All(services, descriptor => Assert.Equal(ServiceLifetime.Scoped, descriptor.Lifetime));
+        Assert.Same(services, services.AddInfrastructure(Configuration()));
+        Assert.Contains(services, descriptor => descriptor.ServiceType == typeof(IRepository<>));
+        Assert.Contains(services, descriptor => descriptor.ServiceType == typeof(IUnitOfWork));
+        Assert.All(
+            services.Where(descriptor =>
+                descriptor.ServiceType == typeof(IRepository<>) ||
+                descriptor.ServiceType == typeof(IUnitOfWork) ||
+                descriptor.ServiceType == typeof(IPublisher) ||
+                descriptor.ServiceType == typeof(ISender)),
+            descriptor => Assert.Equal(ServiceLifetime.Scoped, descriptor.Lifetime));
         using var provider = services.BuildServiceProvider(new ServiceProviderOptions
         {
             ValidateScopes = true,
             ValidateOnBuild = true
         });
-        Assert.Null(provider.GetService<IRepository<RepositoryProbe>>());
-        Assert.Empty(provider.GetServices<IRepository<RepositoryProbe>>());
-        Assert.Null(provider.GetService(typeof(IRepository<>)));
+        using var scope = provider.CreateScope();
+        Assert.NotNull(scope.ServiceProvider.GetService<IRepository<RepositoryProbe>>());
+        Assert.NotNull(scope.ServiceProvider.GetService<IUnitOfWork>());
     }
+
+    private static IConfiguration Configuration() =>
+        new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:Default"] = "Data Source=:memory:"
+            })
+            .Build();
 
     [Fact]
     public void ApplicationRegistrationIsIdempotent()

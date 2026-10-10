@@ -14,7 +14,7 @@ public sealed class ArchitectureTests
     ["AulaPedidos.Domain", "AulaPedidos.Application", "AulaPedidos.Infrastructure", "AulaPedidos.Api"];
 
     [Fact]
-    public void SolutionContainsExactlyFourProductionAndTwoTestProjectsOnNet10()
+    public void SolutionContainsExactlyFourProductionAndThreeTestProjectsOnNet10()
     {
         var solution = XDocument.Load(Path.Combine(Root, "CursoNETIA.slnx"));
         var paths = solution.Descendants("Project").Select(project => (string)project.Attribute("Path")!).ToArray();
@@ -22,7 +22,8 @@ public sealed class ArchitectureTests
             .Concat(new[]
             {
                 "tests/AulaPedidos.ArchitectureTests/AulaPedidos.ArchitectureTests.csproj",
-                "tests/AulaPedidos.Api.IntegrationTests/AulaPedidos.Api.IntegrationTests.csproj"
+                "tests/AulaPedidos.Api.IntegrationTests/AulaPedidos.Api.IntegrationTests.csproj",
+                "tests/AulaPedidos.Infrastructure.Tests/AulaPedidos.Infrastructure.Tests.csproj"
             });
         Assert.Equal(expected.Order(), paths.Order());
         foreach (var path in paths)
@@ -35,7 +36,7 @@ public sealed class ArchitectureTests
     [Theory]
     [InlineData("AulaPedidos.Domain", new string[0], new string[0])]
     [InlineData("AulaPedidos.Application", new[] { "AulaPedidos.Domain" }, new[] { "Mediator.Abstractions", "Microsoft.Extensions.DependencyInjection.Abstractions" })]
-    [InlineData("AulaPedidos.Infrastructure", new[] { "AulaPedidos.Application" }, new[] { "Microsoft.Extensions.Configuration.Abstractions", "Microsoft.Extensions.DependencyInjection.Abstractions" })]
+    [InlineData("AulaPedidos.Infrastructure", new[] { "AulaPedidos.Application" }, new[] { "Microsoft.EntityFrameworkCore.Sqlite", "Microsoft.Extensions.Configuration.Abstractions", "Microsoft.Extensions.DependencyInjection.Abstractions" })]
     [InlineData("AulaPedidos.Api", new[] { "AulaPedidos.Application", "AulaPedidos.Infrastructure" }, new[] { "Mediator.SourceGenerator", "Microsoft.AspNetCore.OpenApi" })]
     public void ProjectReferencesAndPackagesRespectLayerBoundaries(string name, string[] projects, string[] packages)
     {
@@ -73,6 +74,16 @@ public sealed class ArchitectureTests
         {
             Assert.DoesNotContain(references, reference => reference.StartsWith("Microsoft.Extensions", StringComparison.Ordinal) || reference.StartsWith("Mediator", StringComparison.Ordinal));
         }
+        if (name is "AulaPedidos.Domain" or "AulaPedidos.Application")
+        {
+            Assert.DoesNotContain(references, reference =>
+                reference.Contains("EntityFrameworkCore", StringComparison.OrdinalIgnoreCase) ||
+                reference.Contains("Sqlite", StringComparison.OrdinalIgnoreCase));
+        }
+        if (name == "AulaPedidos.Infrastructure")
+        {
+            Assert.Contains("Microsoft.EntityFrameworkCore", references);
+        }
         if (name == "AulaPedidos.Application")
         {
             Assert.Contains("Mediator", references);
@@ -84,7 +95,7 @@ public sealed class ArchitectureTests
     [InlineData("AulaPedidos.Application")]
     [InlineData("AulaPedidos.Infrastructure")]
     [InlineData("AulaPedidos.Api")]
-    public void RestoredGraphHasNoPersistenceOrUnrequestedMessagingPackages(string name)
+    public void RestoredGraphKeepsPersistenceInsideInfrastructureAndHasNoUnrequestedMessaging(string name)
     {
         using var assets = JsonDocument.Parse(File.ReadAllText(Path.Combine(Root, "src", name, "obj", "project.assets.json")));
         var packages = assets.RootElement.GetProperty("libraries").EnumerateObject()
@@ -92,13 +103,27 @@ public sealed class ArchitectureTests
             .Select(library => library.Name.Split('/')[0]).ToArray();
         Assert.DoesNotContain(packages, package =>
             package.StartsWith("MediatR", StringComparison.OrdinalIgnoreCase) ||
+            package.Contains("MassTransit", StringComparison.OrdinalIgnoreCase) ||
+            package.Contains("Wolverine", StringComparison.OrdinalIgnoreCase));
+        var persistence = new Func<string, bool>(package =>
             package.Contains("EntityFramework", StringComparison.OrdinalIgnoreCase) ||
             package.Contains("SqlClient", StringComparison.OrdinalIgnoreCase) ||
             package.Contains("Sqlite", StringComparison.OrdinalIgnoreCase) ||
             package.Contains("Npgsql", StringComparison.OrdinalIgnoreCase) ||
-            package.Contains("MySql", StringComparison.OrdinalIgnoreCase) ||
-            package.Contains("MassTransit", StringComparison.OrdinalIgnoreCase) ||
-            package.Contains("Wolverine", StringComparison.OrdinalIgnoreCase));
+            package.Contains("MySql", StringComparison.OrdinalIgnoreCase));
+        if (name is "AulaPedidos.Domain" or "AulaPedidos.Application")
+        {
+            Assert.DoesNotContain(packages, package => persistence(package));
+        }
+        else
+        {
+            Assert.Contains(packages, package =>
+                package.Equals("Microsoft.EntityFrameworkCore.Sqlite", StringComparison.Ordinal));
+            Assert.DoesNotContain(packages, package =>
+                package.Contains("SqlClient", StringComparison.OrdinalIgnoreCase) ||
+                package.Contains("Npgsql", StringComparison.OrdinalIgnoreCase) ||
+                package.Contains("MySql", StringComparison.OrdinalIgnoreCase));
+        }
         if (name == "AulaPedidos.Api")
         {
             Assert.Contains("Mediator.Abstractions", packages);
@@ -107,7 +132,7 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
-    public void RepositoryContractIsMinimalAndStorageIndependent()
+    public void PersistenceContractsAreStorageIndependent()
     {
         var repository = typeof(IRepository<>);
         Assert.Equal("AulaPedidos.Application", repository.Assembly.GetName().Name);
@@ -118,29 +143,47 @@ public sealed class ArchitectureTests
         var entityType = repository.GetGenericArguments().Single();
         Assert.Empty(entityType.GetGenericParameterConstraints());
         Assert.Equal(GenericParameterAttributes.ReferenceTypeConstraint, entityType.GenericParameterAttributes);
-        Assert.Equal(new[] { "AddAsync", "RemoveAsync" }, repository.GetMethods().Select(method => method.Name).Order());
-        foreach (var method in repository.GetMethods())
+        Assert.Equal(
+            new[] { "AddAsync", "AnyAsync", "CountAsync", "FirstOrDefaultAsync", "GetAsync", "GetPagedAsync", "Query", "Remove", "Update" },
+            repository.GetMethods().Select(method => method.Name).Order());
+
+        var unitOfWork = typeof(IUnitOfWork);
+        Assert.Equal("AulaPedidos.Application", unitOfWork.Assembly.GetName().Name);
+        Assert.True(unitOfWork.IsInterface);
+        var save = Assert.Single(unitOfWork.GetMethods());
+        Assert.Equal("SaveChangesAsync", save.Name);
+        Assert.Equal(typeof(Task<int>), save.ReturnType);
+        Assert.True(save.GetParameters().Single().IsOptional);
+
+        foreach (var type in new[] { repository, unitOfWork })
         {
-            Assert.Equal(typeof(Task), method.ReturnType);
-            var parameters = method.GetParameters();
-            Assert.Equal(2, parameters.Length);
-            Assert.Equal(entityType, parameters[0].ParameterType);
-            Assert.Equal(typeof(CancellationToken), parameters[1].ParameterType);
-            Assert.True(parameters[1].IsOptional);
+            Assert.DoesNotContain(type.GetMethods().SelectMany(method => method.GetParameters())
+                .Select(parameter => parameter.ParameterType.Assembly.GetName().Name!)
+                .Append(string.Empty),
+                assembly => assembly.Contains("EntityFrameworkCore", StringComparison.OrdinalIgnoreCase));
         }
     }
 
     [Fact]
-    public void ProductionContainsOnlyTechnicalTypesAndNoRepositoryImplementation()
+    public void ProductionContainsOnlyTechnicalTypesAndNoBusinessEntities()
     {
         Assert.Empty(DeclaredTypes("AulaPedidos.Domain"));
         Assert.Equal(new[]
         {
             "AulaPedidos.Application.Abstractions.Persistence.IRepository`1",
+            "AulaPedidos.Application.Abstractions.Persistence.IUnitOfWork",
             "AulaPedidos.Application.DependencyInjection"
         }, DeclaredTypes("AulaPedidos.Application").Select(type => type.FullName!).Order());
-        Assert.Equal(new[] { "AulaPedidos.Infrastructure.DependencyInjection" },
-            DeclaredTypes("AulaPedidos.Infrastructure").Select(type => type.FullName!));
+        Assert.Equal(new[]
+        {
+            "AulaPedidos.Infrastructure.DependencyInjection",
+            "AulaPedidos.Infrastructure.Persistence.AppDbContext",
+            "AulaPedidos.Infrastructure.Persistence.Repository`1",
+            "AulaPedidos.Infrastructure.Persistence.UnitOfWork"
+        }, DeclaredTypes("AulaPedidos.Infrastructure").Select(type => type.FullName!).Order());
+        Assert.DoesNotContain(typeof(AulaPedidos.Infrastructure.Persistence.AppDbContext).GetProperties(),
+            property => property.PropertyType.IsGenericType &&
+                property.PropertyType.GetGenericTypeDefinition().Name.StartsWith("DbSet", StringComparison.Ordinal));
         Assert.All(DeclaredTypes("AulaPedidos.Api"), type =>
             Assert.True(type == typeof(Program) || type.Namespace is "Mediator" or "Mediator.Internals" ||
                 type.FullName == "Microsoft.Extensions.DependencyInjection.MediatorDependencyInjectionExtensions", type.FullName));
@@ -151,8 +194,6 @@ public sealed class ArchitectureTests
                 !path.StartsWith($"bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal)).Order());
         foreach (var type in ProductionProjects.SelectMany(DeclaredTypes))
         {
-            Assert.DoesNotContain(type.GetInterfaces(), contract =>
-                contract.IsGenericType && contract.GetGenericTypeDefinition() == typeof(IRepository<>));
             Assert.DoesNotContain(type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static),
                 field => field.FieldType.IsGenericType &&
                     field.FieldType.GetGenericArguments().Any(argument => argument.Namespace?.StartsWith("AulaPedidos.", StringComparison.Ordinal) == true));
@@ -160,13 +201,19 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
-    public void ApiConfigurationHasNoDatabaseOrBusinessSettings()
+    public void ApiConfigurationOnlyAddsTheSqliteConnectionString()
     {
         foreach (var file in Directory.EnumerateFiles(Path.Combine(Root, "src", "AulaPedidos.Api"), "appsettings*.json"))
         {
             using var document = JsonDocument.Parse(File.ReadAllText(file));
             Assert.All(document.RootElement.EnumerateObject(), property =>
-                Assert.Contains(property.Name, new[] { "Logging", "AllowedHosts" }));
+                Assert.Contains(property.Name, new[] { "Logging", "AllowedHosts", "ConnectionStrings" }));
+            if (document.RootElement.TryGetProperty("ConnectionStrings", out var connectionStrings))
+            {
+                var connection = Assert.Single(connectionStrings.EnumerateObject());
+                Assert.Equal("Default", connection.Name);
+                Assert.StartsWith("Data Source=", connection.Value.GetString());
+            }
         }
         var httpFile = File.ReadAllLines(Path.Combine(Root, "src", "AulaPedidos.Api", "AulaPedidos.Api.http"));
         Assert.Equal(new[] { "GET {{AulaPedidos.Api_HostAddress}}/health", "GET {{AulaPedidos.Api_HostAddress}}/openapi/v1.json" },

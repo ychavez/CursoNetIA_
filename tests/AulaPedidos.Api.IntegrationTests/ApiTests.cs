@@ -70,7 +70,7 @@ public sealed class ApiTests
     }
 
     [Fact]
-    public async Task ApiResolvesTheOfficialScopedMediatorWithoutRepositoriesOrBusinessEndpoints()
+    public async Task ApiResolvesTheOfficialScopedMediatorAndScopedPersistenceWithoutBusinessEndpoints()
     {
         await using var factory = CreateFactory("Production");
         using var client = factory.CreateClient();
@@ -83,9 +83,10 @@ public sealed class ApiTests
         Assert.Same(mediator, scope.ServiceProvider.GetRequiredService<ISender>());
         Assert.Same(mediator, scope.ServiceProvider.GetRequiredService<IPublisher>());
         Assert.NotSame(mediator, secondScope.ServiceProvider.GetRequiredService<IMediator>());
-        Assert.Null(scope.ServiceProvider.GetService<IRepository<RepositoryProbe>>());
-        Assert.Empty(scope.ServiceProvider.GetServices<IRepository<RepositoryProbe>>());
-        Assert.Null(scope.ServiceProvider.GetService(typeof(IRepository<>)));
+        var repository = scope.ServiceProvider.GetRequiredService<IRepository<RepositoryProbe>>();
+        Assert.Same(repository, scope.ServiceProvider.GetRequiredService<IRepository<RepositoryProbe>>());
+        Assert.NotSame(repository, secondScope.ServiceProvider.GetRequiredService<IRepository<RepositoryProbe>>());
+        Assert.NotNull(scope.ServiceProvider.GetRequiredService<IUnitOfWork>());
         var endpoints = factory.Services.GetRequiredService<EndpointDataSource>().Endpoints;
         var endpoint = Assert.Single(endpoints.OfType<RouteEndpoint>());
         Assert.Equal("/health", endpoint.RoutePattern.RawText);
