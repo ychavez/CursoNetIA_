@@ -45,7 +45,7 @@ Si editfiles no está disponible, entrega el informe listo para guardar y su rut
 
 ## Trazabilidad con GitHub
 
-- El Coordinador conserva la síntesis en `docs/informes/<tarea>/3-sintesis.md` y referencia el issue de GitHub existente; antes de crear uno nuevo, comprueba si ya hay un issue vinculado para no duplicarlo.
+- El Coordinador conserva la síntesis en `docs/informes/<tarea>/3-sintesis-2026-10-12.md` y referencia el issue de GitHub existente; antes de crear uno nuevo, comprueba si ya hay un issue vinculado para no duplicarlo.
 - El Implementador mantiene un único PR vinculado al issue y documenta únicamente los resultados realmente ejecutados. No crea un PR duplicado al reanudar el trabajo.
 - Pruebas puede escribir y ejecutar tests durante la implementación cuando se le autorice; el informe 2B sigue siendo un análisis previo independiente.
 - Antes de solicitar revisión, Ejecuta build y tests aplicables, revisa el diff y reporta los resultados reales. Los cambios de seguridad deben pasar NuGet Audit, Dependency Review, CodeQL y el análisis de secretos configurados en Actions.
