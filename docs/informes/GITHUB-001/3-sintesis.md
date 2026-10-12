@@ -12,6 +12,8 @@ Marcador de idempotencia: `<!-- task:ychavez/CursoNetIA_:GITHUB-001 -->`.
 
 Rama de implementación: `codex/github-quality-flow`.
 
+PR: [#2 — Integra issues y PR con CI, cobertura y revisión Copilot](https://github.com/ychavez/CursoNetIA_/pull/2).
+
 ## Fuentes consultadas
 
 - Instrucciones y agentes de `.github/`, código de `src/` y pruebas de `tests/`.
@@ -52,7 +54,7 @@ No se realizaron consultas 2A/2B de una nueva funcionalidad de negocio ni se inv
 - CodeQL configurado con ejecución semanal; [CodeQL Setup](https://github.com/ychavez/CursoNetIA_/actions/runs/38290891257) completado correctamente y cero alertas abiertas en la base.
 - [Ruleset 24945310](https://github.com/ychavez/CursoNetIA_/rules/24945310) activo: checks, CodeQL, revisión automática Copilot y protección de `master`.
 - Auditoría NuGet local aprobada; `actionlint` 1.7.12 valida ambos workflows sin errores.
-- Primera ejecución de CI y revisión de Copilot sobre el PR: pendiente de publicar esta rama; el resultado real se registra en el PR.
+- El PR #2 inició CI, seguridad, CodeQL y revisión automática de Copilot. Los checks y comentarios del PR conservan el resultado real de cada commit; consulta [la entrega](4-entrega.md).
 
 ## Pendientes y límites
 
