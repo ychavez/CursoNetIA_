@@ -35,12 +35,21 @@ Si editfiles no está disponible, entrega el informe listo para guardar y su rut
 - Las utilidades del proyecto se escriben en C#; no crear scripts de PowerShell.
 
 ## Calidad
+
 - Cambios pequeños y coherentes con las convenciones existentes.
 - Usa async/await y CancellationToken para I/O; evita .Result y .Wait().
 - Valida las entradas y protege reglas del dominio.
 - No guardes secretos ni datos sensibles en código o logs.
 - Al implementar, compila la solución y ejecuta verificaciones proporcionales al cambio. Informa resultados reales y pendientes.
 - No publiques, elimines datos compartidos ni cambies credenciales sin una petición expresa.
+
+## Trazabilidad con GitHub
+
+- El Coordinador conserva la síntesis en `docs/informes/<tarea>/3-sintesis.md` y referencia el issue de GitHub existente; antes de crear uno nuevo, comprueba si ya hay un issue vinculado para no duplicarlo.
+- El Implementador mantiene un único PR vinculado al issue y documenta únicamente los resultados realmente ejecutados. No crea un PR duplicado al reanudar el trabajo.
+- Pruebas puede escribir y ejecutar tests durante la implementación cuando se le autorice; el informe 2B sigue siendo un análisis previo independiente.
+- Antes de solicitar revisión, Ejecuta build y tests aplicables, revisa el diff y reporta los resultados reales. Los cambios de seguridad deben pasar NuGet Audit, Dependency Review, CodeQL y el análisis de secretos configurados en Actions.
+- La protección de rama y la solicitud automática de revisión de Copilot son ajustes remotos de GitHub: verificar su estado autenticado y registrar cualquier limitación, sin afirmarlo como completado desde archivos locales.
 
 ## Comprobación
 Desde la raíz: dotnet build CursoNETIA.slnx.

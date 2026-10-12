@@ -221,6 +221,7 @@ public sealed class ArchitectureTests
     }
 
     private static IEnumerable<Type> DeclaredTypes(string name) => Assembly.Load(name).GetTypes()
+        .Where(type => type.Namespace != "Coverlet.Core.Instrumentation.Tracker")
         .Where(type => !IsCompilerGenerated(type) &&
             type.FullName != "Microsoft.AspNetCore.OpenApi.Generated.OpenApiJsonSchemaContext");
 

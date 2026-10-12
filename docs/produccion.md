@@ -16,10 +16,16 @@ La solución incluye controles técnicos ejecutables, pero no se declara lista p
 | Telemetría | OTel y dashboard local | Colector/backend protegido, muestreo, retención, alertas y control de PII |
 | Health checks | Vida y disponibilidad DB | Política de reinicio/retirada, dependencias críticas y umbrales |
 | Pruebas | Unitarias e integración local | SQL Server real en CI, carga representativa, contratos externos y recuperación |
-| Entrega | Pipeline verificable | Entornos, aprobaciones, SBOM según política, rollback y trazabilidad |
+| Entrega | GitHub Actions ejecuta build, pruebas, cobertura, NuGet Audit, Dependency Review, CodeQL y análisis de secretos | Entornos, aprobaciones, SBOM según política, rollback y trazabilidad |
 | Operación | Runbook base | Guardia, propietarios, objetivos SLO, manual de incidentes y simulacros |
 
 ## Ensayo de liberación
+
+## Controles de calidad en GitHub
+
+Los flujos de `.github/workflows/` se ejecutan en los pull requests y en `main`. CI restaura con NuGet Audit, compila, ejecuta todas las pruebas, agrega los informes Cobertura y falla si la cobertura de líneas total es menor a 80%; el artefacto `test-and-coverage-results` conserva el informe. `coverlet.runsettings` excluye de esa métrica los archivos generados bajo `obj`. CodeQL analiza C# en cambios y semanalmente, Dependency Review revisa los cambios de dependencias del PR y Secret scan usa Gitleaks sobre el historial disponible. Dependabot abre actualizaciones semanales para NuGet y GitHub Actions.
+
+La protección de rama, el bloqueo por checks y la revisión automática de Copilot se configuran en GitHub, no en archivos versionados. Antes de integrar un PR, confirmar autenticadamente que los checks de CI, CodeQL, Dependency Review y Secret scan son requeridos y que Copilot fue solicitado de nuevo tras el último push; registrar una limitación real si no se dispone de esos permisos.
 
 Revisar la evidencia de la liberación siguiendo el [protocolo común](multiagente-copilot.md). Una conclusión del coordinador no autoriza un despliegue. Separar a quien implementa de quien acepta y nombrar a la persona responsable de liberar. Los datos sintéticos y las credenciales locales no autorizan una publicación en producción.
 

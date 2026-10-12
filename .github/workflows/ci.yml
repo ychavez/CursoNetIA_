@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-dotnet@v5.0.0
+        with:
+          dotnet-version: 10.0.x
+      - name: Restore and audit NuGet dependencies
+        run: >-
+          dotnet restore CursoNETIA.slnx --force-evaluate
+          -p:NuGetAudit=true -p:NuGetAuditMode=all
+          -warnaserror:NU1901,NU1902,NU1903,NU1904
+      - name: Build
+        run: dotnet build CursoNETIA.slnx --no-restore --configuration Release
+      - name: Test with coverage
+        run: >-
+          dotnet test CursoNETIA.slnx --no-build --configuration Release
+          --collect:"XPlat Code Coverage"
+          --settings coverlet.runsettings
+          --results-directory artifacts/test-results
+      - name: Aggregate coverage
+        run: |
+          dotnet tool install dotnet-reportgenerator-globaltool --tool-path .tools --version 5.4.11
+          .tools/reportgenerator "-reports:artifacts/test-results/**/coverage.cobertura.xml" "-targetdir:artifacts/coverage" "-reporttypes:Cobertura;HtmlInline_AzurePipelines"
+      - name: Enforce line coverage threshold
+        run: |
+          line_rate=$(grep -oP '<coverage[^>]*line-rate="\K[^"]+' artifacts/coverage/Cobertura.xml)
+          line_percentage=$(awk "BEGIN { print $line_rate * 100 }")
+          printf 'Line coverage: %.2f%%\n' "$line_percentage" | tee -a "$GITHUB_STEP_SUMMARY"
+          awk "BEGIN { exit !($line_percentage >= 80) }" ||
+            { echo "Line coverage is below the required 80%."; exit 1; }
+      - name: Publish test and coverage artifacts
+        uses: actions/upload-artifact@v4.6.2
+        if: always()
+        with:
+          name: test-and-coverage-results
+          path: artifacts/
+          if-no-files-found: error
