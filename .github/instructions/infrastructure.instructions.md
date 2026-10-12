@@ -1,9 +1,13 @@
 ---
-applyTo: "src/AulaPedidos.Infrastructure/**/*.cs"
+applyTo: "src/AulaPedidos.Infrastructure/**"
 ---
 
-Implementa contratos de Application y mantén los detalles técnicos en esta capa. Registra los tiempos de vida de DI apropiados. Cuando exista persistencia, usa consultas parametrizadas y transacciones donde corresponda. Añade EF, outbox, caché o adaptadores sólo cuando sean parte de la tarea.
+# Infrastructure: implementación y revisión
 
-Aplica el flujo de clase de .github/copilot-instructions.md: trabaja directamente con la petición y el contexto disponible, sin requisitos de documentos de proceso.
-
-Para BASE-001, prepara Persistence para las implementaciones futuras de IRepository<T>. Como todavía no hay entidades ni almacenamiento solicitado, no inventes repositorios concretos ni agregues EF o base de datos. El contrato y el punto de extensión quedan listos; la persistencia real se implementará en una tarea posterior.
+- Implementa contratos de Application y mantén aquí EF Core, SQLite y adaptadores externos. No dependas de Api ni decidas permisos a partir de valores no confiables del cliente.
+- Ya existen `AppDbContext`, `Repository<TEntity>` e `UnitOfWork` sobre SQLite. Regístralos como scoped y comprueba que repositorio y unidad de trabajo compartan el mismo contexto. No captures el contexto en singletons ni lo uses simultáneamente.
+- `Query` y lecturas mantienen `AsNoTracking`; `AddAsync`, `Update` y `Remove` no llaman a `SaveChanges`. `SaveChangesAsync` confirma los cambios del scope y propaga la cancelación.
+- `GetPagedAsync` valida número/tamaño de página positivos, evita desbordamiento del offset y aplica filtros, includes y orden antes de paginar. El orden sigue siendo opcional; quien necesite páginas estables debe proporcionarlo. No introduzcas un máximo o un total sin requisito.
+- Usa consultas parametrizadas; no concatenes entradas en SQL. Las rutas de include y expresiones de orden deben definirse por código o listas permitidas, no trasladarse sin validar desde HTTP.
+- Revisa errores de configuración sin imprimir cadenas con credenciales. No añadas migraciones destructivas, caché, outbox, reintentos o proveedores nuevos fuera del alcance; si se solicitan, prueba sus fallos y consistencia.
+- Para cambios de persistencia revisa evidencia con SQLite relacional: lecturas sin seguimiento, escrituras visibles tras confirmar, cancelación y aislamiento por scope. SQLite no prueba traducción ni concurrencia de SQL Server. No reemplaces esas verificaciones por mocks que repitan la implementación.

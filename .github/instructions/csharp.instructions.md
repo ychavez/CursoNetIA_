@@ -2,35 +2,14 @@
 applyTo: "**/*.cs"
 ---
 
-# Convenciones de C# — AulaPedidos
+# C#: implementación y revisión
 
-## Lenguaje y formato
-
-- Usa nombres de código en inglés y explicaciones en español.
-- Usa PascalCase para tipos, métodos y propiedades públicas.
-- Usa camelCase para parámetros y variables locales.
-- Usa _camelCase para campos privados cuando corresponda.
-- Usa nombres descriptivos y coherentes con el código existente.
-- Respeta .editorconfig: cuatro espacios y namespaces file-scoped.
-- Conserva los contratos existentes al nombrar implementaciones.
-
-## Diseño y arquitectura
-
-- Respeta Clean Architecture y las decisiones de docs/adr/.
-- Aplica SOLID según la necesidad; evita abstracciones innecesarias.
-- Domain protege reglas de negocio y no depende de HTTP ni EF Core.
-- Application coordina casos de uso mediante contratos.
-- Infrastructure implementa persistencia y servicios externos.
-- Api usa Minimal APIs y delega el negocio a Application.
-- Conserva el mediador propio y Result donde ya se utilizan.
-- Realiza cambios pequeños dentro del alcance autorizado.
-
-## Datos y operaciones
-
-- Usa decimal para precios y cantidades monetarias.
-- Conserva el precio histórico de las líneas del pedido.
-- Valida las entradas antes de modificar el estado de una entidad.
-- Respeta la nulabilidad y trata explícitamente los valores ausentes.
-- Usa async/await para I/O y propaga CancellationToken.
-- Evita .Result y .Wait() en operaciones asincrónicas.
-- Respeta los tiempos de vida de los servicios existentes.
+- Usa nombres de código en inglés y explicaciones en español. Respeta PascalCase en tipos y miembros públicos, camelCase en variables y parámetros, y `_camelCase` en campos privados.
+- Mantén el formato existente y namespaces file-scoped. Respeta `.editorconfig` si se incorpora.
+- Aplica SOLID según el problema; no exijas una interfaz por clase ni patrones sin un caso de uso. Domain protege invariantes, Application coordina, Infrastructure implementa detalles y Api adapta HTTP.
+- El repositorio usa Mediator de martinothamar, Repository y Unit of Work. No sustituirlos por MediatR o un mediador propio ni asumir que Result ya existe.
+- Usa `decimal` para montos cuando se incorporen entidades. Valida antes de modificar estado y conserva invariantes también ante fallos.
+- Respeta nulabilidad, propaga `CancellationToken` en I/O y evita `.Result`/`.Wait()`. Revisa disposal, tiempos de vida de DI y dependencias scoped capturadas por singletons.
+- Revisa inyección, acceso indebido a recursos, entradas sin límites, secretos y datos sensibles en logs cuando el cambio toque esas superficies. Señala la ruta concreta del fallo; no declares seguridad completa por una revisión favorable.
+- Centra la revisión del PR en defectos y regresiones del diff: cita archivo, condición que los provoca, consecuencia y prueba faltante o corrección propuesta. Distingue defectos de sugerencias de estilo; evita exigir capacidades futuras o repetir hallazgos de otra capa.
+- Contrasta arquitectura y patrones con código, contratos y el alcance vigente del issue. Los documentos históricos no demuestran capacidades implementadas. No inventes ejecución de tests, cobertura ni análisis de seguridad: cita los resultados disponibles de CI y declara lo pendiente.

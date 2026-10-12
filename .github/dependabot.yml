@@ -1,0 +1,22 @@
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '07:00'
+      timezone: America/Mexico_City
+    open-pull-requests-limit: 5
+    groups:
+      dotnet-patches:
+        patterns: ['Microsoft.*', 'System.*']
+        update-types: [patch]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '07:00'
+      timezone: America/Mexico_City
+    open-pull-requests-limit: 5

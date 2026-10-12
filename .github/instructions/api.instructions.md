@@ -1,9 +1,14 @@
 ---
-applyTo: "src/AulaPedidos.Api/**/*.cs"
+applyTo: "src/AulaPedidos.Api/**"
 ---
 
-Usa Minimal APIs. Mantén el negocio en Application y Domain. Configura DI y middleware desde Api. Describe rutas y respuestas con OpenAPI. Aplica validación, ProblemDetails, autenticación y autorización cuando lo requiera la funcionalidad; no implementes mecanismos ajenos a la petición. No registres secretos.
+# API: implementación y revisión
 
-Aplica el flujo de clase de .github/copilot-instructions.md: trabaja directamente con la petición y el contexto disponible, sin requisitos de documentos de proceso.
-
-Para BASE-001, registra la biblioteca Mediator de martinothamar con su código generado: Mediator.SourceGenerator se instala en Api y AddMediator se invoca en la composición. No usar MediatR ni instalar el generador en todas las capas. Selecciona un lifetime compatible con futuras dependencias scoped.
+- Usa Minimal APIs. Los endpoints traducen contratos HTTP y delegan los casos de uso a Application; no acceden directamente a `DbContext` ni implementan reglas del dominio.
+- La referencia a Infrastructure se usa para composición en `Program.cs`. Registra dependencias y middleware con tiempos de vida compatibles.
+- Conserva Mediator de martinothamar: `Mediator.SourceGenerator` pertenece a Api, con `PrivateAssets="all"`; `AddMediator` registra handlers de Application con lifetime scoped. No introducir MediatR ni un mediador propio.
+- Comprueba rutas, DTOs, validación, códigos HTTP y OpenAPI contra el contrato del issue. Usa ProblemDetails para los errores cuando se incorporen endpoints que lo requieran; no exponer excepciones internas ni secretos.
+- Cuando el cambio introduzca datos protegidos, valida identidad, permisos y acceso al recurso. No confíes en owner, rol o importe recibidos del cliente; añade límites de entrada y paginación donde sean necesarios.
+- No amplíes CORS ni omitas validación de tokens para solucionar pruebas. Revisa que logs y configuración no expongan credenciales o datos personales.
+- La base actual publica `/health` en todos los entornos y OpenAPI solo en Development; no exige autenticación de negocio todavía. No declares fallos por funcionalidades futuras descritas en documentos de la aplicación completa.
+- Para cambios HTTP revisa pruebas de integración del contrato y sus casos negativos. Los resultados de tests, cobertura y seguridad se acreditan con los checks de Actions; la revisión de Copilot no los ejecuta por sí sola.

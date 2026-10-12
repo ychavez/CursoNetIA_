@@ -1,0 +1,7 @@
+{
+  "state": "configured",
+  "languages": ["csharp"],
+  "query_suite": "extended",
+  "threat_model": "remote_and_local",
+  "runner_type": "standard"
+}
