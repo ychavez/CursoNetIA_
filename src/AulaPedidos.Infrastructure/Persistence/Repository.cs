@@ -90,4 +90,10 @@ public sealed class Repository<TEntity> : IRepository<TEntity> where TEntity : c
         ArgumentNullException.ThrowIfNull(entity);
         _context.Set<TEntity>().Remove(entity);
     }
+
+    public void RemoveRange(IEnumerable<TEntity> entities)
+    {
+        ArgumentNullException.ThrowIfNull(entities);
+        _context.Set<TEntity>().RemoveRange(entities);
+    }
 }

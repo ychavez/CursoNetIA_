@@ -153,6 +153,54 @@ public sealed class RepositoryTests : IAsyncLifetime
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => _unitOfWork.SaveChangesAsync(source.Token));
     }
 
+    [Theory]
+    [InlineData(1)]
+    [InlineData(3)]
+    [InlineData(5)]
+    public async Task RemoveRangeMarksEntitiesAndOnlyPersistsAfterSaveChanges(int entityCount)
+    {
+        var entities = await _repository.GetAsync(entity => entity.Value <= entityCount);
+
+        _repository.RemoveRange(entities);
+
+        Assert.Equal(entityCount, _context.ChangeTracker.Entries<TestEntity>().Count());
+        Assert.All(entities, entity => Assert.Equal(EntityState.Deleted, _context.Entry(entity).State));
+        await using (var probe = CreateContext())
+        {
+            Assert.Equal(5, await probe.Set<TestEntity>().CountAsync());
+        }
+
+        Assert.Equal(entityCount, await _unitOfWork.SaveChangesAsync(CancellationToken.None));
+        await using (var probe = CreateContext())
+        {
+            var remainingValues = await probe.Set<TestEntity>()
+                .OrderBy(entity => entity.Value)
+                .Select(entity => entity.Value)
+                .ToListAsync();
+            Assert.Equal(Enumerable.Range(entityCount + 1, 5 - entityCount), remainingValues);
+        }
+    }
+
+    [Fact]
+    public async Task RemoveRangeWithEmptyCollectionDoesNotChangeAnything()
+    {
+        _repository.RemoveRange(Array.Empty<TestEntity>());
+
+        Assert.Empty(_context.ChangeTracker.Entries());
+        Assert.Equal(0, await _unitOfWork.SaveChangesAsync(CancellationToken.None));
+        await using var probe = CreateContext();
+        Assert.Equal(5, await probe.Set<TestEntity>().CountAsync());
+    }
+
+    [Fact]
+    public void RemoveRangeRejectsNullCollection()
+    {
+        var exception = Assert.Throws<ArgumentNullException>(() => _repository.RemoveRange(null!));
+
+        Assert.Equal("entities", exception.ParamName);
+        Assert.Empty(_context.ChangeTracker.Entries());
+    }
+
     [Fact]
     public async Task NullEntitiesAreRejected()
     {
