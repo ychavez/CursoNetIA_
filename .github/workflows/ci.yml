@@ -138,14 +138,7 @@ jobs:
 
       - name: Require at least 80 percent maintained-source line coverage
         if: ${{ !cancelled() && steps.merge_coverage.outcome == 'success' }}
-        uses: irongut/CodeCoverageSummary@51cc3a756ddcd398d447c044c02cb6aa83fdae95 # v1.3.0
-        with:
-          filename: CoverageReport/Cobertura.xml
-          badge: true
-          format: markdown
-          output: both
-          thresholds: '80 80'
-          fail_below_min: true
+        run: python3 .github/scripts/check_coverage.py CoverageReport/Cobertura.xml
 
       - name: Publish coverage in the job summary
         if: ${{ !cancelled() }}
@@ -172,6 +165,5 @@ jobs:
             TestResults/**/coverage.cobertura.xml
             CoverageReport/
             CoverageRaw/
-            code-coverage-results.md
           if-no-files-found: error
           retention-days: 14
