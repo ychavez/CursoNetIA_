@@ -4,7 +4,7 @@ El Implementador abre o actualiza un draft PR para cada implementación o correc
 
 ## Estado de la conexión
 
-Al preparar esta guía se sugirió el plugin GitHub, pero no quedó instalado ni se confirmó una sesión MCP autenticada. Los archivos del repositorio preparan el flujo; no acreditan PR creados, checks ejecutados ni ajustes remotos habilitados. Registra cualquier cambio de este estado con evidencia real.
+Este workspace configura el servidor GitHub MCP integrado de VS Code y solicita sus conjuntos necesarios en [`.vscode/settings.json`](../.vscode/settings.json). El perfil de cada agente limita sus herramientas, pero la configuración no acredita por sí sola una sesión MCP autenticada, permisos suficientes ni funciones de seguridad habilitadas en el repositorio. Comprueba las herramientas reales al iniciar la sesión y registra cualquier limitación con evidencia.
 
 ## Resúmenes de análisis en el issue
 
