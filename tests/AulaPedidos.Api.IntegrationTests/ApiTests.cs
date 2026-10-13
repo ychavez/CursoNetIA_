@@ -70,7 +70,7 @@ public sealed class ApiTests
     }
 
     [Fact]
-    public async Task ApiResolvesTheOfficialScopedMediatorAndScopedPersistenceWithoutBusinessEndpoints()
+    public async Task ApiResolvesTheOfficialScopedMediatorAndScopedPersistenceWithProductEndpoints()
     {
         await using var factory = CreateFactory("Production");
         using var client = factory.CreateClient();
@@ -88,7 +88,10 @@ public sealed class ApiTests
         Assert.NotSame(repository, secondScope.ServiceProvider.GetRequiredService<IRepository<RepositoryProbe>>());
         Assert.NotNull(scope.ServiceProvider.GetRequiredService<IUnitOfWork>());
         var endpoints = factory.Services.GetRequiredService<EndpointDataSource>().Endpoints;
-        var endpoint = Assert.Single(endpoints.OfType<RouteEndpoint>());
+        var routes = endpoints.OfType<RouteEndpoint>().ToArray();
+        Assert.Equal(6, routes.Length);
+        Assert.Equal(5, routes.Count(route => route.RoutePattern.RawText!.StartsWith("/products", StringComparison.Ordinal)));
+        var endpoint = Assert.Single(routes, route => route.RoutePattern.RawText == "/health");
         Assert.Equal("/health", endpoint.RoutePattern.RawText);
         Assert.Null(endpoint.Metadata.GetMetadata<IAuthorizeData>());
     }

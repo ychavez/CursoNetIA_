@@ -58,7 +58,7 @@ public sealed class ArchitectureTests
     [Theory]
     [InlineData("AulaPedidos.Domain", new string[0])]
     [InlineData("AulaPedidos.Application", new[] { "AulaPedidos.Domain" })]
-    [InlineData("AulaPedidos.Infrastructure", new[] { "AulaPedidos.Application" })]
+    [InlineData("AulaPedidos.Infrastructure", new[] { "AulaPedidos.Application", "AulaPedidos.Domain" })]
     [InlineData("AulaPedidos.Api", new[] { "AulaPedidos.Application", "AulaPedidos.Infrastructure" })]
     public void CompiledReferencesCannotCrossForbiddenBoundaries(string name, string[] allowed)
     {
@@ -165,30 +165,33 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
-    public void ProductionContainsOnlyTechnicalTypesAndNoBusinessEntities()
+    public void ProductionTypesStayWithinTheirLayerAndRequestedProductFeature()
     {
-        Assert.Empty(DeclaredTypes("AulaPedidos.Domain"));
+        Assert.Equal(new[] { typeof(AulaPedidos.Domain.Product) }, DeclaredTypes("AulaPedidos.Domain"));
         Assert.Equal(new[]
         {
             "AulaPedidos.Application.Abstractions.Persistence.IRepository`1",
             "AulaPedidos.Application.Abstractions.Persistence.IUnitOfWork",
             "AulaPedidos.Application.DependencyInjection"
-        }, DeclaredTypes("AulaPedidos.Application").Select(type => type.FullName!).Order());
+        }, DeclaredTypes("AulaPedidos.Application")
+            .Where(type => type.Namespace != "AulaPedidos.Application.Products").Select(type => type.FullName!).Order());
         Assert.Equal(new[]
         {
             "AulaPedidos.Infrastructure.DependencyInjection",
             "AulaPedidos.Infrastructure.Persistence.AppDbContext",
             "AulaPedidos.Infrastructure.Persistence.Repository`1",
             "AulaPedidos.Infrastructure.Persistence.UnitOfWork"
-        }, DeclaredTypes("AulaPedidos.Infrastructure").Select(type => type.FullName!).Order());
+        }, DeclaredTypes("AulaPedidos.Infrastructure")
+            .Where(type => type.Namespace != "AulaPedidos.Infrastructure.Persistence.Migrations").Select(type => type.FullName!).Order());
         Assert.DoesNotContain(typeof(AulaPedidos.Infrastructure.Persistence.AppDbContext).GetProperties(),
             property => property.PropertyType.IsGenericType &&
                 property.PropertyType.GetGenericTypeDefinition().Name.StartsWith("DbSet", StringComparison.Ordinal));
         Assert.All(DeclaredTypes("AulaPedidos.Api"), type =>
             Assert.True(type == typeof(Program) || type.Namespace is "Mediator" or "Mediator.Internals" ||
+                type == typeof(AulaPedidos.Api.ProductRequest) || type == typeof(AulaPedidos.Api.ProductEndpoints) ||
                 type.FullName == "Microsoft.Extensions.DependencyInjection.MediatorDependencyInjectionExtensions", type.FullName));
         var apiDirectory = Path.Combine(Root, "src", "AulaPedidos.Api");
-        Assert.Equal(new[] { "Program.cs" }, Directory.EnumerateFiles(apiDirectory, "*.cs", SearchOption.AllDirectories)
+        Assert.Equal(new[] { "ProductEndpoints.cs", "Program.cs" }, Directory.EnumerateFiles(apiDirectory, "*.cs", SearchOption.AllDirectories)
             .Select(path => Path.GetRelativePath(apiDirectory, path))
             .Where(path => !path.StartsWith($"obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal) &&
                 !path.StartsWith($"bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal)).Order());
