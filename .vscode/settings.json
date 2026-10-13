@@ -1,0 +1,13 @@
+{
+  "github.copilot.chat.githubMcpServer.enabled": true,
+  "github.copilot.chat.githubMcpServer.toolsets": [
+    "default",
+    "actions",
+    "code_security",
+    "dependabot",
+    "secret_protection",
+    "code_quality",
+    "governance",
+    "copilot"
+  ]
+}

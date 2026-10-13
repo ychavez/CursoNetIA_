@@ -24,7 +24,7 @@ Los perfiles, instrucciones y prompts del repositorio organizan el trabajo de lo
 
 Los perfiles no coordinan chats automáticamente. El alumno cambia de rol y pasa un prompt con el identificador, la carpeta exacta, los archivos de entrada necesarios y el repositorio, número y URL del issue confirmado, o su estado pendiente. El Coordinador resuelve ese issue antes de repartir consultas. Adjuntar un documento histórico aporta contexto; no restablece sus reglas antiguas de nombres o guardado.
 
-Para implementar con draft PR, comprueba también la conexión GitHub MCP y las herramientas de ramas, archivos, PR, checks y Copilot incluidas en el perfil. La [guía de PR y revisiones](github-pr.md) distingue la configuración versionada de las opciones de GitHub que deben verificarse en el repositorio. Declarar una herramienta no conecta ni habilita servicios por sí solo.
+Para implementar con draft PR, comprueba también la conexión GitHub MCP y las herramientas de ramas, archivos, PR, checks y Copilot incluidas en el perfil. [La configuración de VS Code](../.vscode/settings.json) solicita para este workspace los conjuntos `default`, `actions`, `code_security`, `dependabot`, `secret_protection`, `code_quality`, `governance` y `copilot`; cada perfil sigue limitando las herramientas que puede usar. Tras cambiar la configuración, reinicia el servidor GitHub MCP o ejecuta `MCP: Reset Cached Tools` y comprueba las herramientas reales en el selector del agente. La [guía de PR y revisiones](github-pr.md) distingue la configuración versionada de los permisos y servicios que deben verificarse en GitHub. Declarar una herramienta no conecta ni habilita servicios por sí solo.
 
 ## Si falta una herramienta
 
