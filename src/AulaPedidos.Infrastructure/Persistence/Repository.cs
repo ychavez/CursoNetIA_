@@ -91,7 +91,7 @@ public sealed class Repository<TEntity> : IRepository<TEntity> where TEntity : c
         _context.Set<TEntity>().Remove(entity);
     }
 
-    public void RemoveRange(IEnumerable<TEntity> entities)
+    public void BatchDelete(IEnumerable<TEntity> entities)
     {
         ArgumentNullException.ThrowIfNull(entities);
         _context.Set<TEntity>().RemoveRange(entities);

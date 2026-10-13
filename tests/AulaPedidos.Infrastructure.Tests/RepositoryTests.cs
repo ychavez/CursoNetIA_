@@ -157,11 +157,11 @@ public sealed class RepositoryTests : IAsyncLifetime
     [InlineData(1)]
     [InlineData(3)]
     [InlineData(5)]
-    public async Task RemoveRangeMarksEntitiesAndOnlyPersistsAfterSaveChanges(int entityCount)
+    public async Task BatchDeleteMarksEntitiesAndOnlyPersistsAfterSaveChanges(int entityCount)
     {
         var entities = await _repository.GetAsync(entity => entity.Value <= entityCount);
 
-        _repository.RemoveRange(entities);
+        _repository.BatchDelete(entities);
 
         Assert.Equal(entityCount, _context.ChangeTracker.Entries<TestEntity>().Count());
         Assert.All(entities, entity => Assert.Equal(EntityState.Deleted, _context.Entry(entity).State));
@@ -182,9 +182,9 @@ public sealed class RepositoryTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task RemoveRangeWithEmptyCollectionDoesNotChangeAnything()
+    public async Task BatchDeleteWithEmptyCollectionDoesNotChangeAnything()
     {
-        _repository.RemoveRange(Array.Empty<TestEntity>());
+        _repository.BatchDelete(Array.Empty<TestEntity>());
 
         Assert.Empty(_context.ChangeTracker.Entries());
         Assert.Equal(0, await _unitOfWork.SaveChangesAsync(CancellationToken.None));
@@ -193,9 +193,9 @@ public sealed class RepositoryTests : IAsyncLifetime
     }
 
     [Fact]
-    public void RemoveRangeRejectsNullCollection()
+    public void BatchDeleteRejectsNullCollection()
     {
-        var exception = Assert.Throws<ArgumentNullException>(() => _repository.RemoveRange(null!));
+        var exception = Assert.Throws<ArgumentNullException>(() => _repository.BatchDelete(null!));
 
         Assert.Equal("entities", exception.ParamName);
         Assert.Empty(_context.ChangeTracker.Entries());

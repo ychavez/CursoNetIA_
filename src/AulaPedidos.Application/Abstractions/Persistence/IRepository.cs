@@ -64,5 +64,5 @@ public interface IRepository<TEntity> where TEntity : class
 
     /// <summary>Marca las entidades para eliminación; no persiste. Una colección vacía no hace nada.</summary>
     /// <exception cref="ArgumentNullException">La colección es <c>null</c>.</exception>
-    void RemoveRange(IEnumerable<TEntity> entities);
+    void BatchDelete(IEnumerable<TEntity> entities);
 }

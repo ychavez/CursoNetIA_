@@ -144,7 +144,7 @@ public sealed class ArchitectureTests
         Assert.Empty(entityType.GetGenericParameterConstraints());
         Assert.Equal(GenericParameterAttributes.ReferenceTypeConstraint, entityType.GenericParameterAttributes);
         Assert.Equal(
-            new[] { "AddAsync", "AnyAsync", "CountAsync", "FirstOrDefaultAsync", "GetAsync", "GetPagedAsync", "Query", "Remove", "RemoveRange", "Update" },
+            new[] { "AddAsync", "AnyAsync", "BatchDelete", "CountAsync", "FirstOrDefaultAsync", "GetAsync", "GetPagedAsync", "Query", "Remove", "Update" },
             repository.GetMethods().Select(method => method.Name).Order());
 
         var unitOfWork = typeof(IUnitOfWork);
