@@ -165,9 +165,10 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
-    public void ProductionContainsOnlyTechnicalTypesAndNoBusinessEntities()
+    public void ProductionContainsOnlyTechnicalTypesAndTheProductEntity()
     {
-        Assert.Empty(DeclaredTypes("AulaPedidos.Domain"));
+        Assert.Equal(new[] { "AulaPedidos.Domain.Product" },
+            DeclaredTypes("AulaPedidos.Domain").Select(type => type.FullName!).Order());
         Assert.Equal(new[]
         {
             "AulaPedidos.Application.Abstractions.Persistence.IRepository`1",
