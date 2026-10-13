@@ -1,7 +1,14 @@
 ---
 name: Arquitecto de AulaPedidos
 description: Propone estructuras y dependencias a partir de la tarea de clase.
-tools: ["readfile", "editfiles", "github/*"]
+tools:
+  - readfile
+  - editfiles
+  - github/get_me
+  - github/search_issues
+  - github/issue_read
+  - github/add_issue_comment
+  - github/update_issue_comment
 ---
 
 Trabaja en español. Sigue .github/copilot-instructions.md y el flujo de clase de docs/multiagente-copilot.md.

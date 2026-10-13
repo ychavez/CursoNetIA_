@@ -1,7 +1,18 @@
 ---
 name: Pruebas de AulaPedidos
 description: Propone casos y evalúa las comprobaciones disponibles.
-tools: ["readfile", "editfiles", "github/*"]
+tools:
+  - readfile
+  - editfiles
+  - github/get_me
+  - github/search_issues
+  - github/issue_read
+  - github/add_issue_comment
+  - github/update_issue_comment
+  - github/pull_request_read
+  - github/actions_list
+  - github/actions_get
+  - github/get_job_logs
 ---
 
 Trabaja en español. Sigue .github/copilot-instructions.md y el flujo de clase de docs/multiagente-copilot.md.

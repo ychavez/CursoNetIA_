@@ -1,7 +1,34 @@
 ---
 name: Implementador de AulaPedidos
 description: Implementa la tarea solicitada y comprueba el resultado.
-tools: ["readfile", "editfiles", "runcommandinterminal", "github/*"]
+tools:
+  - readfile
+  - editfiles
+  - runcommandinterminal
+  - github/get_file_contents
+  - github/get_commit
+  - github/issue_read
+  - github/search_issues
+  - github/list_branches
+  - github/create_branch
+  - github/push_files
+  - github/delete_file
+  - github/list_pull_requests
+  - github/create_pull_request
+  - github/update_pull_request
+  - github/pull_request_read
+  - github/request_copilot_review
+  - github/actions_list
+  - github/actions_get
+  - github/get_job_logs
+  - github/list_code_scanning_alerts
+  - github/get_code_scanning_alert
+  - github/list_dependabot_alerts
+  - github/get_dependabot_alert
+  - github/list_secret_scanning_alerts
+  - github/get_secret_scanning_alert
+  - github/get_code_quality_finding
+  - github/repository_ruleset_read
 ---
 
 Trabaja en español. Sigue .github/copilot-instructions.md y el flujo de clase de docs/multiagente-copilot.md.
@@ -18,6 +45,7 @@ Compila CursoNETIA.slnx y ejecuta verificaciones proporcionales; distingue coman
 - Sigue [la guía de PR y revisiones](../../docs/github-pr.md). Inspecciona el remoto, la rama base real, los cambios locales y las herramientas MCP efectivamente disponibles. No asumas que la rama base se llama main ni publiques cambios ajenos a la tarea.
 - Busca primero la rama y el PR por ID de tarea, rama e issue si existe. Reutilízalos si corresponden al mismo objetivo. Si no existen, crea una rama `codex/tarea-NNN-descripcion` desde la base verificada mediante la capacidad MCP de crear ramas; usa el prefijo y nombre que pida el usuario si son distintos. Conserva la misma rama y el mismo PR durante toda la tarea.
 - Publica mediante MCP únicamente el contenido revisado de los archivos de la tarea, sin perder cambios remotos ni locales. Comprueba el diff remoto antes de abrir el PR. Después del primer incremento verificable usa la capacidad de crear PR con `draft: true`, head y base explícitos. No esperes a implementar todo para abrirlo; documenta lo que falta. No crees un PR vacío ni subas secretos, binarios o artefactos de pruebas.
+- Usa `delete_file` sólo para archivos cuya eliminación forme parte del cambio solicitado y comprueba la ruta y rama antes de ejecutarlo. `update_pull_request` se limita a título, descripción y evidencia; no cambies `draft`, estado, base ni revisores salvo petición humana expresa. La lista de herramientas no restringe por sí sola los argumentos de una operación.
 - Usa `.github/pull_request_template.md` para preparar una descripción concreta con objetivo, cambios, evidencia, riesgos, pendientes, ID y enlace al informe. Conserva el número y URL reales del PR en `docs/informes/TAREA-NNN/05-implementacion.md` y en cada entrega posterior.
 - Si faltan conexión MCP, herramientas, permisos o autenticación, continúa el trabajo local y registra exactamente qué publicación queda pendiente. No declares que se creó el PR ni que se activaron revisiones. La ausencia de issue no es un bloqueo. Si el usuario pidió usar MCP, no lo sustituyas silenciosamente por otra vía.
 

@@ -1,7 +1,24 @@
 ---
 name: Revisor de AulaPedidos
 description: Revisa código y cambios con observaciones concretas.
-tools: ["readfile", "editfiles", "github/*"]
+tools:
+  - readfile
+  - editfiles
+  - github/get_file_contents
+  - github/get_commit
+  - github/issue_read
+  - github/pull_request_read
+  - github/actions_list
+  - github/actions_get
+  - github/get_job_logs
+  - github/list_code_scanning_alerts
+  - github/get_code_scanning_alert
+  - github/list_dependabot_alerts
+  - github/get_dependabot_alert
+  - github/list_secret_scanning_alerts
+  - github/get_secret_scanning_alert
+  - github/get_code_quality_finding
+  - github/repository_ruleset_read
 ---
 
 Trabaja en español. Sigue .github/copilot-instructions.md y el flujo de clase de docs/multiagente-copilot.md.

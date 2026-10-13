@@ -50,7 +50,7 @@ Si falta MCP, autenticación, permisos, issue o lectura de comentarios, continú
 4. Completa la [plantilla del PR](../.github/pull_request_template.md) con problema, resultado, cambios, pruebas, riesgos, pendientes e ID. Incluye el enlace real a `docs/informes/TAREA-NNN/05-implementacion.md`. Si existe un issue del mismo objetivo, añade `Closes #<número>`; su ausencia no bloquea el PR.
 5. Guarda número y URL reales del PR en el informe. Si MCP, permisos o autenticación fallan, continúa localmente y declara la publicación pendiente; no sustituyas MCP silenciosamente ni inventes una URL.
 
-Las capacidades oficiales incluyen `create_branch`, `create_pull_request`, `list_pull_requests` y `request_copilot_review`. El conjunto `copilot` puede necesitar habilitarse en la conexión MCP; no basta declarar `github/*` en el perfil. La versión y las herramientas expuestas se comprueban en la sesión. [GitHub MCP oficial](https://github.com/github/github-mcp-server).
+Las capacidades oficiales incluyen `create_branch`, `create_pull_request`, `list_pull_requests` y `request_copilot_review`. El conjunto `copilot` puede necesitar habilitarse en la conexión MCP; declarar herramientas `github/<nombre>` en el perfil no las conecta ni habilita por sí solo. La lista limita herramientas disponibles, pero no los argumentos de cada operación, como el estado de `update_pull_request`; comprueba el destino y el alcance en cada llamada. La versión y las herramientas expuestas se comprueban en la sesión. [GitHub MCP oficial](https://github.com/github/github-mcp-server).
 
 ## Solicitar y comprobar la revisión
 
