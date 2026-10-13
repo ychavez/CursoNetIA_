@@ -22,7 +22,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapHealthChecks("/health");
+app.MapGet("/", () => "Hello, World!");
 app.Run();
 
 public partial class Program;
-

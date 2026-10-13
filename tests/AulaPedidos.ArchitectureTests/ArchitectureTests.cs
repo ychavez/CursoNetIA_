@@ -216,7 +216,7 @@ public sealed class ArchitectureTests
             }
         }
         var httpFile = File.ReadAllLines(Path.Combine(Root, "src", "AulaPedidos.Api", "AulaPedidos.Api.http"));
-        Assert.Equal(new[] { "GET {{AulaPedidos.Api_HostAddress}}/health", "GET {{AulaPedidos.Api_HostAddress}}/openapi/v1.json" },
+        Assert.Equal(new[] { "GET {{AulaPedidos.Api_HostAddress}}/", "GET {{AulaPedidos.Api_HostAddress}}/health", "GET {{AulaPedidos.Api_HostAddress}}/openapi/v1.json" },
             httpFile.Where(line => line.StartsWith("GET ", StringComparison.Ordinal)));
     }
 

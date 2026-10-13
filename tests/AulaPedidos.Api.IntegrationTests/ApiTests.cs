@@ -32,6 +32,18 @@ public sealed class ApiTests
         Assert.Empty(report.Entries);
     }
 
+    [Fact]
+    public async Task RootReturnsHelloWorld()
+    {
+        await using var factory = CreateFactory("Production");
+        using var client = factory.CreateClient();
+        using var response = await client.GetAsync("/", CancellationToken.None);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("text/plain", response.Content.Headers.ContentType?.MediaType);
+        Assert.Equal("Hello, World!", await response.Content.ReadAsStringAsync(CancellationToken.None));
+    }
+
     [Theory]
     [InlineData("Development", "/health/live")]
     [InlineData("Production", "/health/live")]
@@ -70,7 +82,7 @@ public sealed class ApiTests
     }
 
     [Fact]
-    public async Task ApiResolvesTheOfficialScopedMediatorAndScopedPersistenceWithoutBusinessEndpoints()
+    public async Task ApiResolvesTheOfficialScopedMediatorAndScopedPersistenceWithExpectedEndpoints()
     {
         await using var factory = CreateFactory("Production");
         using var client = factory.CreateClient();
@@ -88,9 +100,13 @@ public sealed class ApiTests
         Assert.NotSame(repository, secondScope.ServiceProvider.GetRequiredService<IRepository<RepositoryProbe>>());
         Assert.NotNull(scope.ServiceProvider.GetRequiredService<IUnitOfWork>());
         var endpoints = factory.Services.GetRequiredService<EndpointDataSource>().Endpoints;
-        var endpoint = Assert.Single(endpoints.OfType<RouteEndpoint>());
-        Assert.Equal("/health", endpoint.RoutePattern.RawText);
-        Assert.Null(endpoint.Metadata.GetMetadata<IAuthorizeData>());
+        var routeEndpoints = endpoints.OfType<RouteEndpoint>().ToArray();
+        Assert.Equal(["/", "/health"], routeEndpoints
+            .Select(endpoint => endpoint.RoutePattern.RawText ?? string.Empty)
+            .OrderBy(path => path)
+            .ToArray());
+        var healthEndpoint = Assert.Single(routeEndpoints, endpoint => endpoint.RoutePattern.RawText == "/health");
+        Assert.Null(healthEndpoint.Metadata.GetMetadata<IAuthorizeData>());
     }
 
     private static WebApplicationFactory<Program> CreateFactory(string environment) =>
