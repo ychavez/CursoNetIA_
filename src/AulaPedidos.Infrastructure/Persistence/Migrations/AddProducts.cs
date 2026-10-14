@@ -25,6 +25,18 @@ public sealed class AddProducts : Migration
     protected override void Down(MigrationBuilder migrationBuilder) =>
         migrationBuilder.DropTable(name: "Products");
 
-    protected override void BuildTargetModel(ModelBuilder modelBuilder) =>
-        AppDbContextModelSnapshot.ConfigureModel(modelBuilder);
+    protected override void BuildTargetModel(ModelBuilder modelBuilder)
+    {
+        // El modelo histórico de esta migración no debe depender de futuros snapshots.
+        modelBuilder.HasAnnotation("ProductVersion", "10.0.12");
+        modelBuilder.Entity("AulaPedidos.Domain.Product", product =>
+        {
+            product.Property<Guid>("Id").HasColumnType("TEXT");
+            product.Property<decimal>("Price").HasColumnType("TEXT");
+            product.Property<string>("Description").HasColumnType("TEXT");
+            product.Property<string>("AlternateDescription").HasColumnType("TEXT");
+            product.HasKey("Id");
+            product.ToTable("Products");
+        });
+    }
 }

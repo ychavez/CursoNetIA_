@@ -18,14 +18,16 @@ namespace AulaPedidos.Api.IntegrationTests;
 
 public sealed class ProductApiTests : IAsyncLifetime
 {
-    private readonly string _databasePath = Path.Combine(FindRoot(), "TestResults", $"products-{Guid.NewGuid():N}.db");
+    private readonly string _databasePath = Path.Join(FindRoot(), "TestResults", $"products-{Guid.NewGuid():N}.db");
+    private WebApplicationFactory<Program> _baseFactory = null!;
     private WebApplicationFactory<Program> _factory = null!;
     private HttpClient _client = null!;
 
     public async Task InitializeAsync()
     {
         Directory.CreateDirectory(Path.GetDirectoryName(_databasePath)!);
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        _baseFactory = new WebApplicationFactory<Program>();
+        _factory = _baseFactory.WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Production");
             builder.ConfigureServices(services =>
@@ -51,6 +53,7 @@ public sealed class ProductApiTests : IAsyncLifetime
     {
         _client.Dispose();
         await _factory.DisposeAsync();
+        await _baseFactory.DisposeAsync();
         File.Delete(_databasePath);
         File.Delete(_databasePath + "-wal");
         File.Delete(_databasePath + "-shm");
@@ -70,7 +73,7 @@ public sealed class ProductApiTests : IAsyncLifetime
         Assert.Equal(new[] { first, other }.OrderBy(product => product.Id), listed);
 
         using var update = await _client.PutAsJsonAsync($"/products/{first.Id}",
-            new { price = -9.25m, description = (string?)null, alternateDescription = " nueva " });
+            new AulaPedidos.Api.ProductRequest(-9.25m, null, " nueva "));
         Assert.Equal(HttpStatusCode.OK, update.StatusCode);
         var expected = new ProductDto(first.Id, -9.25m, null, " nueva ");
         Assert.Equal(expected, await update.Content.ReadFromJsonAsync<ProductDto>());
@@ -119,15 +122,19 @@ public sealed class ProductApiTests : IAsyncLifetime
     public async Task InvalidJsonCannotCreateOrPartiallyUpdate(string json)
     {
         var stored = await CreateAsync(10m, "original", "original alterna");
-        foreach (var path in new[] { "/products", $"/products/{stored.Id}" })
-        {
-            using var request = new HttpRequestMessage(path == "/products" ? HttpMethod.Post : HttpMethod.Put, path)
+        var requests = new[] { "/products", $"/products/{stored.Id}" }.Select(path =>
+            new HttpRequestMessage(path == "/products" ? HttpMethod.Post : HttpMethod.Put, path)
             {
                 Content = new StringContent(json, Encoding.UTF8, "application/json")
-            };
-            using var response = await _client.SendAsync(request);
-            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-            Assert.DoesNotContain("Exception", await response.Content.ReadAsStringAsync(), StringComparison.Ordinal);
+            });
+        foreach (var request in requests)
+        {
+            using (request)
+            {
+                using var response = await _client.SendAsync(request);
+                Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+                Assert.DoesNotContain("Exception", await response.Content.ReadAsStringAsync(), StringComparison.Ordinal);
+            }
         }
 
         Assert.Equal(stored, await ReadStoredAsync(stored.Id));
@@ -202,7 +209,7 @@ public sealed class ProductApiTests : IAsyncLifetime
     private static string FindRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
-        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "CursoNETIA.slnx")))
+        while (directory is not null && !File.Exists(Path.Join(directory.FullName, "CursoNETIA.slnx")))
         {
             directory = directory.Parent;
         }

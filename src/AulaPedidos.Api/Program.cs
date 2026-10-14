@@ -42,5 +42,3 @@ app.MapProducts();
 app.Run();
 
 public partial class Program;
-
-

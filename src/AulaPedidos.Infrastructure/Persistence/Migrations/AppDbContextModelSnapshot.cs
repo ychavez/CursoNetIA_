@@ -6,9 +6,7 @@ namespace AulaPedidos.Infrastructure.Persistence.Migrations;
 [DbContext(typeof(AppDbContext))]
 public sealed class AppDbContextModelSnapshot : ModelSnapshot
 {
-    protected override void BuildModel(ModelBuilder modelBuilder) => ConfigureModel(modelBuilder);
-
-    internal static void ConfigureModel(ModelBuilder modelBuilder)
+    protected override void BuildModel(ModelBuilder modelBuilder)
     {
         modelBuilder.HasAnnotation("ProductVersion", "10.0.12");
         modelBuilder.Entity("AulaPedidos.Domain.Product", product =>
