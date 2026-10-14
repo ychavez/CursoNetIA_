@@ -1,5 +1,6 @@
 using AulaPedidos.Api;
 using AulaPedidos.Application;
+using AulaPedidos.Application.Validation;
 using AulaPedidos.Infrastructure;
 using AulaPedidos.Infrastructure.Persistence;
 using Mediator;
@@ -14,10 +15,12 @@ builder.Services.AddMediator(options =>
 {
     options.Assemblies = [typeof(AulaPedidos.Application.DependencyInjection)];
     options.ServiceLifetime = ServiceLifetime.Scoped;
+    options.PipelineBehaviors = [typeof(ValidationBehavior<,>)];
 });
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
 
 await using var app = builder.Build();
 
