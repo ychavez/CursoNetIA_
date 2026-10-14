@@ -1,8 +1,12 @@
+using AulaPedidos.Api;
 using AulaPedidos.Application;
 using AulaPedidos.Infrastructure;
+using AulaPedidos.Infrastructure.Persistence;
 using Mediator;
+using Microsoft.EntityFrameworkCore;
 
-var builder = WebApplication.CreateBuilder(args);
+var migrate = args.Contains("--migrate", StringComparer.Ordinal);
+var builder = WebApplication.CreateBuilder(args.Where(argument => argument != "--migrate").ToArray());
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -13,8 +17,20 @@ builder.Services.AddMediator(options =>
 });
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
+builder.Services.AddProblemDetails();
 
-var app = builder.Build();
+await using var app = builder.Build();
+
+// Aplicación del esquema explícita y separada del arranque HTTP; nunca recrea la base.
+if (migrate)
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await context.Database.MigrateAsync(app.Lifetime.ApplicationStopping);
+    return;
+}
+
+app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {
@@ -22,7 +38,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapHealthChecks("/health");
+app.MapProducts();
 app.Run();
 
 public partial class Program;
-
