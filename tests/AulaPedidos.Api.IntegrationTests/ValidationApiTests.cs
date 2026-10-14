@@ -61,7 +61,7 @@ public sealed class ValidationApiTests
 
         using var response = await client.PostAsJsonAsync("/products", new
         {
-            price = 12.5m, description = "SENTINEL_PRIVATE", alternateDescription = (string?)null
+            price = 12.5m, description = "SENTINEL_PRIVATE", alternateDescription = null
         });
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
