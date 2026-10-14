@@ -16,6 +16,7 @@ public sealed class ValidationBehavior<TMessage, TResponse>(IEnumerable<IValidat
 
         foreach (var validator in validators)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var result = await validator.ValidateAsync(new ValidationContext<TMessage>(message), cancellationToken);
             failures.AddRange(result.Errors);
         }

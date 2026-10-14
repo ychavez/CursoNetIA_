@@ -18,14 +18,20 @@ public sealed class ValidationExceptionHandler(IProblemDetailsService problemDet
             .GroupBy(failure => failure.PropertyName)
             .ToDictionary(group => group.Key, group => group.Select(failure => failure.ErrorMessage).ToArray());
         httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
-        return await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
+        var details = new ValidationProblemDetails(errors)
+        {
+            Status = StatusCodes.Status400BadRequest,
+            Title = "Uno o más errores de validación."
+        };
+        if (!await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
         {
             HttpContext = httpContext,
-            ProblemDetails = new ValidationProblemDetails(errors)
-            {
-                Status = StatusCodes.Status400BadRequest,
-                Title = "Uno o más errores de validación."
-            }
-        });
+            ProblemDetails = details
+        }))
+        {
+            await httpContext.Response.WriteAsJsonAsync(details, options: null,
+                contentType: "application/problem+json", cancellationToken: cancellationToken);
+        }
+        return true;
     }
 }
