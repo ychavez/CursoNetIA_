@@ -1,0 +1,11 @@
+# Validación de mensajes — TAREA-004
+
+Application contiene `ValidationBehavior<TMessage, TResponse>` con FluentValidation 12.1.1. Api lo incorpora mediante `options.PipelineBehaviors` del generador de Mediator 3.0.2, manteniendo el lifetime scoped. No basta con registrar un genérico abierto sin configurar el generador.
+
+Para una regla aprobada, crear un `AbstractValidator<TMessage>` en Application y registrar explícitamente `IValidator<TMessage>` con lifetime scoped en `AddApplication`. Pueden coexistir varios validadores del mismo mensaje. Actualmente no hay validadores productivos: `docs/products.md` permite precios negativos y descripciones opcionales, y mantiene 404 para GUID vacío. No se añade una regla comercial ni se cambia ese contrato para demostrar la infraestructura. La presencia y el tipo decimal de price siguen siendo responsabilidad del binding HTTP existente.
+
+El behavior ejecuta cada `ValidateAsync` secuencialmente, conservando el token, reúne todos los fallos y lanza `ValidationException` antes del handler. Sin validadores o sin errores continúa una sola vez. No captura errores técnicos ni cancelaciones; no se aplica a notificaciones ni streaming. No sustituye las invariantes de Domain ni las restricciones del almacenamiento.
+
+`ValidationExceptionHandler` reutiliza `AddProblemDetails` y `UseExceptionHandler`: devuelve 400 y `ValidationProblemDetails`, agrupando todos los mensajes por campo. Si el escritor no admite el encabezado Accept, conserva el contrato JSON mediante un fallback explícito. No serializa la excepción, valores intentados ni estado personalizado. Los mensajes de los futuros validadores deben ser seguros y no interpolar secretos ni datos personales; la traducción no puede sanear automáticamente texto arbitrario de una regla. Otros fallos mantienen el tratamiento genérico existente.
+
+Las pruebas usan comandos/consultas productivos e ISender real con el registro de Program; sólo añaden validadores de prueba y SQLite aislado. Esos dobles acreditan el pipeline, no reglas comerciales productivas (V12 pendiente). El informe de implementación y la evidencia están en `docs/informes/TAREA-004/05-implementacion.md`; draft PR #21, dependiente del PR #19.
