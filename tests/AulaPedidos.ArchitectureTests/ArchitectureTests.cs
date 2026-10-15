@@ -35,7 +35,7 @@ public sealed class ArchitectureTests
 
     [Theory]
     [InlineData("AulaPedidos.Domain", new string[0], new string[0])]
-    [InlineData("AulaPedidos.Application", new[] { "AulaPedidos.Domain" }, new[] { "Mediator.Abstractions", "Microsoft.Extensions.DependencyInjection.Abstractions" })]
+    [InlineData("AulaPedidos.Application", new[] { "AulaPedidos.Domain" }, new[] { "FluentValidation", "Mediator.Abstractions", "Microsoft.Extensions.DependencyInjection.Abstractions" })]
     [InlineData("AulaPedidos.Infrastructure", new[] { "AulaPedidos.Application" }, new[] { "Microsoft.EntityFrameworkCore.Sqlite", "Microsoft.Extensions.Configuration.Abstractions", "Microsoft.Extensions.DependencyInjection.Abstractions" })]
     [InlineData("AulaPedidos.Api", new[] { "AulaPedidos.Application", "AulaPedidos.Infrastructure" }, new[] { "Mediator.SourceGenerator", "Microsoft.AspNetCore.OpenApi" })]
     public void ProjectReferencesAndPackagesRespectLayerBoundaries(string name, string[] projects, string[] packages)
@@ -72,7 +72,8 @@ public sealed class ArchitectureTests
         }
         if (name == "AulaPedidos.Domain")
         {
-            Assert.DoesNotContain(references, reference => reference.StartsWith("Microsoft.Extensions", StringComparison.Ordinal) || reference.StartsWith("Mediator", StringComparison.Ordinal));
+            Assert.DoesNotContain(references, reference => reference.StartsWith("Microsoft.Extensions", StringComparison.Ordinal) ||
+                reference.StartsWith("Mediator", StringComparison.Ordinal) || reference.StartsWith("FluentValidation", StringComparison.Ordinal));
         }
         if (name is "AulaPedidos.Domain" or "AulaPedidos.Application")
         {
@@ -172,7 +173,8 @@ public sealed class ArchitectureTests
         {
             "AulaPedidos.Application.Abstractions.Persistence.IRepository`1",
             "AulaPedidos.Application.Abstractions.Persistence.IUnitOfWork",
-            "AulaPedidos.Application.DependencyInjection"
+            "AulaPedidos.Application.DependencyInjection",
+            "AulaPedidos.Application.Validation.ValidationBehavior`2"
         }, DeclaredTypes("AulaPedidos.Application")
             .Where(type => type.Namespace != "AulaPedidos.Application.Products").Select(type => type.FullName!).Order());
         Assert.Equal(new[]
@@ -189,9 +191,10 @@ public sealed class ArchitectureTests
         Assert.All(DeclaredTypes("AulaPedidos.Api"), type =>
             Assert.True(type == typeof(Program) || type.Namespace is "Mediator" or "Mediator.Internals" ||
                 type == typeof(AulaPedidos.Api.ProductRequest) || type == typeof(AulaPedidos.Api.ProductEndpoints) ||
+                type == typeof(AulaPedidos.Api.ValidationExceptionHandler) ||
                 type.FullName == "Microsoft.Extensions.DependencyInjection.MediatorDependencyInjectionExtensions", type.FullName));
         var apiDirectory = Path.Combine(Root, "src", "AulaPedidos.Api");
-        Assert.Equal(new[] { "ProductEndpoints.cs", "Program.cs" }, Directory.EnumerateFiles(apiDirectory, "*.cs", SearchOption.AllDirectories)
+        Assert.Equal(new[] { "ProductEndpoints.cs", "Program.cs", "ValidationExceptionHandler.cs" }, Directory.EnumerateFiles(apiDirectory, "*.cs", SearchOption.AllDirectories)
             .Select(path => Path.GetRelativePath(apiDirectory, path))
             .Where(path => !path.StartsWith($"obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal) &&
                 !path.StartsWith($"bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal)).Order());
