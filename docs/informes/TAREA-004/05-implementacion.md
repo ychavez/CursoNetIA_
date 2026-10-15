@@ -91,3 +91,28 @@ Los toolsets opcionales constan en `.vscode/settings.json`, pero no exponen aqu�
 ## Publicación en GitHub
 
 Publicados mediante MCP el primer incremento verificable y las pruebas/inventarios en la misma rama y PR #21. Commits técnicos: `50f0a96` → `0133636` → `82a1a59`. Se preserva el número y [URL real del draft](https://github.com/ychavez/CursoNetIA_/pull/21). Este informe se publica como incremento documental; el diff y los checks actuales se consultan después, y su estado se registra en la descripción de #21. No se publica un comentario de otro rol ni se modifica el issue para simular cierre.
+
+## Seguimiento: CodeQL y cambio remoto concurrente
+
+Tras publicar el informe en `b13ab0e`, el usuario aplicó una sugerencia real de **Copilot Autofix**, commit [64f1eab](https://github.com/ychavez/CursoNetIA_/commit/64f1eabc8d66f4c971b63d8c7bbc138a106b55ab). Se inspeccionó antes de volver a publicar. Se conserva su intención de eliminar un cast mediante un CreateProductCommand como cuerpo JSON tipado, sin depender de un null sin tipo en un anónimo. Se comprobó la disponibilidad de una propuesta aplicada de Autofix, no permisos para invocarlo desde esta sesión.
+
+CodeQL añadió dos hallazgos reales en el PR:
+- [Alerta 32: Useless upcast](https://github.com/ychavez/CursoNetIA_/security/code-scanning/32): se elimina el cast con el mensaje tipado. Su hilo ya figuraba resuelto por la intervención remota; no se atribuye esa resolución al Implementador.
+- [Alerta 31: Missing Dispose](https://github.com/ychavez/CursoNetIA_/security/code-scanning/31): ValidationFactory ahora deriva de WebApplicationFactory y configura el host mediante override, sin crear una factory base que se pierda. Sus consumidores conservan await using. El cierre de la alerta necesita el análisis posterior.
+- Se conserva la [nota humana sobre un futuro patrón Result](https://github.com/ychavez/CursoNetIA_/pull/21#discussion_r4277552155) y la resolución humana del hilo HTTP. No se implementa ese cambio futuro ni se sustituye el contrato aceptado.
+
+Verificación posterior ejecutada: build Release con -warnaserror, 0 errores/advertencias; solución completa **81/81** en `TestResults/tarea-004-codeql-fixes`, log `artifacts/tarea-004-tests-codeql-fixes.log`. Cobertura API repetida en `TestResults/tarea-004-codeql-coverage` (42/42), combinada con infraestructura sin cambios: **97,0 % (231/238)** mantenido y **54,5 % (453/831)** bruto en las rutas de artifacts anteriores. No se modificó código productivo tras su verificación.
+
+Esta tabla reemplaza sólo el estado vigente; la anterior se conserva como instantánea histórica de 82a1a59, no como validación del nuevo HEAD:
+
+| Control | Estado | Commit y evidencia |
+|---|---|---|
+| Compilación estricta y pruebas locales | correcto | Árbol que incorpora 64f1eab con ambas correcciones revisadas; 81/81 y logs/TRX anteriores. CI del nuevo HEAD pendiente. |
+| Cobertura local combinada y reporte bruto | correcto | Mismo árbol: 97,0 % y 54,5 %, reportes reales conservados. |
+| Build/tests/cobertura, NuGet Audit, Dependency Review y CodeQL remotos | pendiente | Se consultarán tras publicar; SHA y enlaces actuales en #21, sin reutilizar checks de 82a1a59 como actuales. |
+| Alertas 31/32 | pendiente | Correcciones implementadas y probadas; falta confirmar el análisis y estado posterior. Hilo 32 resuelto por intervención remota; 31 seguía abierto. |
+| Copilot code review del próximo HEAD | pendiente | Solicitar después del push si no existe una automática para ese commit. |
+| Copilot Autofix | correcto | Propuesta aplicada constatada en 64f1eab, evaluada y adaptada; efectos comprobados con build/tests. No implica herramienta MCP para invocarlo. |
+| Alertas completas, secret scanning/push protection, permisos/licencias y GitHub Code Quality | no disponible | Algunos comentarios CodeQL accesibles no sustituyen el inventario de alertas ni habilitan las capacidades ausentes. |
+
+Siguen pendientes V12, reevaluación y aceptación humana. Se mantiene el draft #21 y su base; informes ajenos intactos.

@@ -59,10 +59,8 @@ public sealed class ValidationApiTests
             await context.SaveChangesAsync();
         }
 
-        using var response = await client.PostAsJsonAsync("/products", new
-        {
-            price = 12.5m, description = "SENTINEL_PRIVATE", alternateDescription = null
-        });
+        using var response = await client.PostAsJsonAsync("/products",
+            new CreateProductCommand(12.5m, "SENTINEL_PRIVATE", null));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
@@ -156,7 +154,12 @@ public sealed class ValidationApiTests
     }
 
     private static WebApplicationFactory<Program> CreateFactory(SqliteConnection connection, Action<IServiceCollection> configure) =>
-        new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        new ValidationFactory(connection, configure);
+
+    private sealed class ValidationFactory(SqliteConnection connection, Action<IServiceCollection> configure)
+        : WebApplicationFactory<Program>
+    {
+        protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             builder.UseEnvironment("Production");
             builder.UseDefaultServiceProvider(options =>
@@ -171,7 +174,8 @@ public sealed class ValidationApiTests
                 services.AddDbContext<AppDbContext>(options => options.UseSqlite(connection));
                 configure(services);
             });
-        });
+        }
+    }
 
     private sealed class ScopedQueryValidator : AbstractValidator<GetProductsQuery>
     {
