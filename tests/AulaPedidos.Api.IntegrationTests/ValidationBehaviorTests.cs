@@ -16,15 +16,25 @@ public sealed class ValidationBehaviorTests
         var message = new GetProductsQuery();
         using var cancellation = new CancellationTokenSource();
         var calls = 0;
-        var validator = new InlineValidator<GetProductsQuery>();
-        validator.RuleFor(query => query).MustAsync(async (query, token) =>
+        var validatorCalls = new int[2];
+        var first = new InlineValidator<GetProductsQuery>();
+        first.RuleFor(query => query).MustAsync(async (query, token) =>
         {
             await Task.Yield();
+            validatorCalls[0]++;
             Assert.Same(message, query);
             Assert.Equal(cancellation.Token, token);
             return true;
         });
-        var behavior = new ValidationBehavior<GetProductsQuery, object>(hasValidator ? [validator] : []);
+        var second = new InlineValidator<GetProductsQuery>();
+        second.RuleFor(query => query).MustAsync((query, token) =>
+        {
+            validatorCalls[1]++;
+            Assert.Same(message, query);
+            Assert.Equal(cancellation.Token, token);
+            return Task.FromResult(true);
+        });
+        var behavior = new ValidationBehavior<GetProductsQuery, object>(hasValidator ? [first, second] : []);
         var expected = new object();
 
         var result = await behavior.Handle(message, (query, token) =>
@@ -37,6 +47,42 @@ public sealed class ValidationBehaviorTests
 
         Assert.Same(expected, result);
         Assert.Equal(1, calls);
+        int[] expectedCalls = hasValidator ? [1, 1] : [0, 0];
+        Assert.Equal(expectedCalls, validatorCalls);
+    }
+
+    [Fact]
+    public async Task ValidCommandRunsEachValidatorAndHandlerExactlyOnce()
+    {
+        var message = new CreateProductCommand(1, null, null);
+        using var cancellation = new CancellationTokenSource();
+        var validatorCalls = new int[2];
+        var validators = Enumerable.Range(0, 2).Select(index =>
+        {
+            var validator = new InlineValidator<CreateProductCommand>();
+            validator.RuleFor(command => command).MustAsync((command, token) =>
+            {
+                validatorCalls[index]++;
+                Assert.Same(message, command);
+                Assert.Equal(cancellation.Token, token);
+                return Task.FromResult(true);
+            });
+            return validator;
+        }).ToArray();
+        var behavior = new ValidationBehavior<CreateProductCommand, int>(validators);
+        var handlerCalls = 0;
+
+        var result = await behavior.Handle(message, (command, token) =>
+        {
+            handlerCalls++;
+            Assert.Same(message, command);
+            Assert.Equal(cancellation.Token, token);
+            return ValueTask.FromResult(42);
+        }, cancellation.Token);
+
+        Assert.Equal(42, result);
+        Assert.Equal([1, 1], validatorCalls);
+        Assert.Equal(1, handlerCalls);
     }
 
     [Fact]
