@@ -116,3 +116,24 @@ Esta tabla reemplaza sólo el estado vigente; la anterior se conserva como insta
 | Alertas completas, secret scanning/push protection, permisos/licencias y GitHub Code Quality | no disponible | Algunos comentarios CodeQL accesibles no sustituyen el inventario de alertas ni habilitan las capacidades ausentes. |
 
 Siguen pendientes V12, reevaluación y aceptación humana. Se mantiene el draft #21 y su base; informes ajenos intactos.
+
+## Seguimiento: cobertura de la ruta válida (2026-10-21)
+
+El ADR 006 y la implementación técnica anterior ya estaban en el árbol recibido; el PR #21 citado arriba fue fusionado posteriormente. Este seguimiento pertenece al [draft PR #29](https://github.com/ychavez/CursoNetIA_/pull/29) y no modifica reglas productivas ni composición.
+
+Se reforzó `tests/AulaPedidos.Api.IntegrationTests/ValidationBehaviorTests.cs`: la consulta válida, con y sin validadores, verifica las llamadas individuales a dos validadores; un comando válido verifica igualmente cada validador una vez, el token y el mensaje originales, una sola llamada al handler y la respuesta. No se añadió registro de validadores comerciales: V12 continúa pendiente de reglas aprobadas.
+
+Comprobaciones ejecutadas desde la raíz de la solución:
+
+```sh
+dotnet test tests/AulaPedidos.Api.IntegrationTests/AulaPedidos.Api.IntegrationTests.csproj --filter 'FullyQualifiedName~ValidationBehaviorTests.ValidOrUnvalidatedMessageContinuesExactlyOnce|FullyQualifiedName~ValidationBehaviorTests.ValidCommandRunsEachValidatorAndHandlerExactlyOnce' --nologo
+```
+
+Resultado focalizado: 3/3 correctas.
+
+| Comando | Resultado |
+|---|---|
+| `dotnet build CursoNETIA.slnx --configuration Release --nologo -warnaserror` | Correcto; 0 errores, 0 advertencias. |
+| `dotnet test CursoNETIA.slnx --configuration Release --no-build --no-restore --nologo` | 82/82 correctas: arquitectura 25, infraestructura 14, API 43; 0 omitidas. |
+
+El fallo de CodeQL consultado en el run 39285747034 corresponde a otro PR de actualización de dependencias: sus logs indican versiones incompatibles de `codeql-action` entre pasos. Los runs iniciales del PR #29 aparecen como `action_required`, sin jobs fallidos registrados; no se atribuyen a estas pruebas ni se presenta como CI verificado para el nuevo commit. No se midió cobertura en este seguimiento; las cifras históricas anteriores no acreditan el HEAD nuevo. Pendiente: comprobación de checks y cobertura del commit vigente por CI, y aprobación humana de reglas productivas si se desean.
